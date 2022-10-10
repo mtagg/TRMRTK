@@ -1,0 +1,18 @@
+/*
+ * MC3479.cpp
+ *
+ *  Created on: Oct 9, 2022
+ *      Author: mmmta
+ */
+
+#include "MC3479.h"
+
+MC3479::MC3479() {
+	// TODO Auto-generated constructor stub
+
+}
+
+MC3479::~MC3479() {
+	// TODO Auto-generated destructor stub
+}
+

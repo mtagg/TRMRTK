@@ -1,0 +1,96 @@
+/*
+ * MC3479.h
+ *
+ *  Created on: Oct 9, 2022
+ *      Author: mmmta
+ *
+ *      Header file for the MC3479 (Memsic Inc.) 3-axis Accelerometer Driver
+ *
+ *      To avoid large sections of comments, functions/methods will use descriptive names.
+ *      Any code that references the data-sheet will have the page number of the datasheet provided:
+ *      https://www.memsic.com/Public/Uploads/uploadfile/files/20220522/MC3479Datasheet(APS-048-0072v1.2).pdf
+ */
+
+#ifndef SRC_MC3479_H_
+#define SRC_MC3479_H_
+
+/*
+ * Register Name/Address macros (p41):
+ */
+//OX00-0X04
+#define MC3479_DEV_STAT			0x05
+#define MC3479_INTR_CTRL		0x06
+#define MC3479_MODE				0x07
+#define MC3479_SR				0x08
+#define MC3479_MOTION_CTRL		0x09
+#define MC3479_FIFO_STAT		0x0A
+#define MC3479_FIFO_RD_P		0x0B
+#define MC3479_FIFO_WR_P		0x0C
+#define MC3479_XOUT_EX_L		0x0D
+#define MC3479_XOUT_EX_H		0x0E
+#define MC3479_YOUT_EX_L		0x0F
+#define MC3479_YOUT_EX_H		0x10 //Note that the data-sheet has a typo, this is the register for MSB***
+#define MC3479_ZOUT_EX_L		0x11
+#define MC3479_ZOUT_EX_H		0x12
+#define MC3479_STATUS			0x13
+#define MC3479_INTR_STAT		0x14
+//0X15-0X1F - Reserved** (p41)
+#define MC3479_CHIP_ID			0x18
+#define MC3479_RANGE			0x20
+#define MC3479_XOFFL			0x21
+#define MC3479_XOFFH			0x22
+#define MC3479_YOFFL			0x23
+#define MC3479_YOFFH			0x24
+#define MC3479_ZOFFL			0x25
+#define MC3479_ZOFFH			0x26
+#define MC3479_XGAIN			0x27
+#define MC3479_YGAIN			0x28
+#define MC3479_ZGAIN			0x29
+//0X2A-0X2C - Reserved** (p42)
+#define MC3479_FIFO_CTRL		0x2D
+#define MC3479_FIFO_TH			0x2E
+#define MC3479_FIFO_INTR		0x2F
+#define MC3479_FIFO_CTRL2_SR2	0x30
+#define MC3479_COMM_CTRL		0x31
+//0X32 - Reserved** (p42)
+#define MC3479_GPIO_CTRL		0x33
+//0X34-3F - Reserved** (p42)
+#define MC3479_TF_THRESH_LSB			0x40
+#define MC3479_TF_THRESH_MSB			0x41
+#define MC3479_TF_DB					0x42
+#define MC3479_AM_THRESH_LSB			0x43
+#define MC3479_AM_THRESH_MSB			0x44
+#define MC3479_AM_DB					0x45
+#define MC3479_SHK_THRESH_LSB			0x46
+#define MC3479_SHK_THRESH_MSB			0x47
+#define MC3479_PK_P2P_DUR_THRESH_LSB	0x48
+#define MC3479_PK_P2P_DUR_THRESH_MSB	0x49
+#define MC3479_TIMER_CTRL				0x4A
+#define MC3479_RD_CNT					0x4B
+//0X4C-0X50 - RESERVED** (p43)
+
+
+
+
+/*
+ * Sample-rate register macros  (p32):
+ */
+#define Rate0_50Hz   0x08
+#define Rate1_100Hz  0x09
+#define Rate2_125Hz  0x0A
+#define Rate3_200Hz  0x0B
+#define Rate4_250Hz  0x0C
+#define Rate5_500Hz  0x0D
+#define Rate6_1000Hz 0x0E
+#define Rate7_2000Hz 0x0F
+
+/*
+ *
+ */
+
+uint8_t getDeviceStatus();
+uint8_t configInterrupts();
+
+
+
+#endif /* SRC_MC3479_H_ */

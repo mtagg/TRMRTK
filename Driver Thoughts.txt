@@ -1,0 +1,28 @@
+Active Stabalized Mug - Driver list:
+	1. (2x) SPI - Position/Accelerometers - Mostly configured By STMCube
+	2. (2x) I2C - Position/Accelerometers - Mostly configured By STMCube
+	3. (2x) UART - Debug/Development - Mostly configured By STMCube
+	4. (2x) Motor Drivers:
+			a. Single pole square pulse control based on angle-position?
+			b. Single pole PWM control based on angle-position? ******
+			c. Multi-pole square pulse control based on angle-position?
+			d. Multi-pole PWM control based on angle-position?
+			e. Direction/speed controlled based on accelerometer data
+			
+			The angle-sensor is very useful when we only want one position the mug will fall back to, as with gimbals. Basically,
+			we would be able to zero the gimbal, and know how many degrees we moved, and then be able to push/pull with the 
+			appropriate coils to adjust the rotor to the home position. This method requires no accelerometer data and is fairly simple to understand.
+			
+			Our mug needs to constantly adjust the home position of the mug, depending on intended pours/tilts. This means we would probably keep the
+			angle/position sensors for closed-loop corrections, but adjust the home position (and therefore adjust which coils are used to home the mug 
+			in real time) for the closed loop control. The open loop would then be the accelerometer input, where homing position is going to be dependant
+			on acceleration. The accelerometer data will need to have a threshold, where we quantify intentional tilt, and as long as we are within this threshold, 
+			the motor's home position will be continuously adjusted. Filtering of large acceleration will be done, which will maintain the motor's home position and allow
+			the closed loop controls to keep the mug steady.
+			
+			This was not my original intention with the motor control, as I was hoping to have a system like option 'e' above, but it is doable, now that I have given it some
+			thought. The drivers will potentially be more complex though.
+	
+	5. Accelerometer Sensor Interface - typical/scheduled packets for fetching and interpretting data from each accelerometer
+	6. Angle/encoder Sensor Interface - typical/scheduled packets for fetching position data, and initializing home position.
+			

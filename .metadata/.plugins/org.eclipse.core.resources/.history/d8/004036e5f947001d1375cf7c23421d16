@@ -1,0 +1,93 @@
+/*
+ * MC3479.h
+ *
+ *  Created on: Oct 9, 2022
+ *      Author: mmmta
+ *
+ *      Header file for the MC3479 (Memsic Inc.) 3-axis Accelerometer Driver
+ *
+ *      To avoid large sections of comments, functions/methods will use descriptive names.
+ *      Any code that references the data-sheet will have the page number of the datasheet provided:
+ *      https://www.memsic.com/Public/Uploads/uploadfile/files/20220522/MC3479Datasheet(APS-048-0072v1.2).pdf
+ */
+
+#ifndef SRC_MC3479_H_
+#define SRC_MC3479_H_
+
+/*
+ * Register Name/Address macros (p41):
+ */
+//OX00-0X04
+#define DEV_STAT		0x05
+#define INTR_CTRL		0x06
+#define MODE			0x07
+#define SR				0x08
+#define MOTION_CTRL		0x09
+#define FIFO_STAT		0x0A
+#define FIFO_RD_P		0x0B
+#define FIFO_WR_P		0x0C
+#define XOUT_EX_L		0x0D
+#define XOUT_EX_H		0x0E
+#define YOUT_EX_L		0x0F
+#define YOUT_EX_H		0x10 //Note that the data-sheet has a typo, this is the register for MSB***
+#define ZOUT_EX_L		0x11
+#define ZOUT_EX_H		0x12
+#define STATUS			0x13
+#define INTR_STAT		0x14
+//0X15-0X1F - Reserved** (p41)
+#define CHIP_ID			0x18
+#define RANGE			0x20
+#define XOFFL			0x21
+#define XOFFH			0x22
+#define YOFFL			0x23
+#define YOFFH			0x24
+#define ZOFFL			0x25
+#define ZOFFH			0x26
+#define XGAIN			0x27
+#define YGAIN			0x28
+#define ZGAIN			0x29
+//0X2A-0X2C - Reserved** (p42)
+#define FIFO_CTRL		0x2D
+#define FIFO_TH			0x2E
+#define FIFO_INTR		0x2F
+#define FIFO_CTRL2_SR2	0x30
+#define COMM_CTRL		0x31
+//0X32 - Reserved** (p42)
+#define GPIO_CTRL		0x33
+//0X34-3F - Reserved** (p42)
+#define TF_THRESH_LSB			0x40
+#define TF_THRESH_MSB			0x41
+#define TF_DB					0x42
+#define AM_THRESH_LSB			0x43
+#define AM_THRESH_MSB			0x44
+#define AM_DB					0x45
+#define SHK_THRESH_LSB			0x46
+#define SHK_THRESH_MSB			0x47
+#define PK_P2P_DUR_THRESH_LSB	0x48
+#define PK_P2P_DUR_THRESH_MSB	0x49
+#define TIMER_CTRL				0x4A
+#define RD_CNT					0x4B
+//0X4C-0X50 - RESERVED** (p43)
+
+
+
+
+/*
+ * Sample-rate register macros  (p32):
+ */
+#define Rate0_50Hz   0x08
+#define Rate1_100Hz  0x09
+#define Rate2_125Hz  0x0A
+#define Rate3_200Hz  0x0B
+#define Rate4_250Hz  0x0C
+#define Rate5_500Hz  0x0D
+#define Rate6_1000Hz 0x0E
+#define Rate7_2000Hz 0x0F
+
+/*
+ *
+ */
+
+
+
+#endif /* SRC_MC3479_H_ */

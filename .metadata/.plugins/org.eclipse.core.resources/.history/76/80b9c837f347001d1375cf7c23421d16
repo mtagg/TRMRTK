@@ -1,0 +1,17 @@
+/*
+ * MP6543A.h
+ *
+ *  Created on: Oct 9, 2022
+ *      Author: mmmta
+ */
+
+#ifndef SRC_MP6543A_H_
+#define SRC_MP6543A_H_
+
+class MP6543A {
+public:
+	MP6543A();
+	virtual ~MP6543A();
+};
+
+#endif /* SRC_MP6543A_H_ */
