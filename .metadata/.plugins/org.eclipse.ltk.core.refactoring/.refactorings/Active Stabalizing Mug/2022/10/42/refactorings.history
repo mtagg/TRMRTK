@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<session version="1.0">
+<refactoring comment="Rename resource &apos;Active Stabalizing Mug/MC349&apos; to &apos;MC3479&apos;" description="Rename resource &apos;MC349&apos;" flags="7" id="org.eclipse.ltk.core.refactoring.rename.resource" input="MC349" name="MC3479" stamp="1665370178332" updateReferences="true"/>
+</session>

@@ -1,0 +1,3 @@
+MP6543B/Src/MP6543B.o: ../MP6543B/Src/MP6543B.cpp \
+ ../MP6543B/Src/../Inc/MP6543B.h
+../MP6543B/Src/../Inc/MP6543B.h:
