@@ -7,10 +7,7 @@
 
 #include "../Inc/MP6543B.h"
 
-MP6543A::MP6543A() {
-	// TODO Auto-generated constructor stub
 
-}
 
 
 

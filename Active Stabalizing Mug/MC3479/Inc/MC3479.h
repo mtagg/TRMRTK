@@ -14,6 +14,11 @@
 #ifndef SRC_MC3479_H_
 #define SRC_MC3479_H_
 
+//Include HAL to allow passed-by-reference HAL objects
+#include "stm32f1xx_hal.h"
+//#include "main.h"
+
+
 /*
  * Register Name/Address macros (p41):
  */
@@ -326,6 +331,126 @@
  * ******************************************************
  * TODO: ARE WE USING FIFO BURST READS?
  */
+
+
+/*
+ * MC3479 I2C Communication Macros (p35)
+ * I2C may run up to 1MHz
+ * To communicate via SPI:
+ * 1. 	The host generates START conditions
+ * 2.	The device id << (SLL) is sent and acklowledged
+ * 3. 	The Reg address is sent and acked
+ * 4a.	If writing to reg, then 8bit data is sent/acked
+ * 4b.	If reading the reg, a RESTART condition is set, followed by a device (ID<<7)+1 for a read, and the data is sent back to host.
+ * 5. 	STOP condition is set by host
+ *
+ * NOTE: pin3 for DOUT_A6 can be pulled to GND or VCC to determine Device ID
+ * TODO GET ALL MACROS FROM DATASHEET
+ */
+
+//DEV ID 1 when DOUT_A6(pin3) is pulled down to GND (p9-10,35)
+#define I2C_DEV_ID_1 		0x4C
+#define I2C_DEV_ID_WRITE_1	0x98
+#define I2C_DEV_ID_READ_1	0x99
+
+//DEV ID 2 when DOUT_A6(pin3) is pulled down to VCC (p9-10,35)
+#define I2C_DEVICE_ID_2 	0x6C
+#define I2C_DEV_ID_WRITE_2	0xD8
+#define I2C_DEV_ID_READ_2	0xD9
+
+/*
+ * MC3479 SPI Communication Macros
+ * SPI may run up to 10MHz.
+ * To communicate via SPI:
+ * 1.	CSN is asserted LOW
+ * 2.	first Byte (MSB) is 0b0xxx_xxxx (read) or 0x1xxx_xxxx(write)
+ * 			the x's are the reg addr  (MSB first)
+ * 3a.	second byte is the data in(to reg (MSB first) for a reg write
+ * 3b 	second byte is 0x00 for read, third byte is read back from register
+ * 4. Data is shifted on CLK rising edge
+ * TODO do we want to configure burst writes (p38)
+ * TODO GET ALL MACROS FROM DATASHEET
+ */
+#define SPIwrite_REG		0x7F //bit-wise AND this with the reg number for register write
+#define SPIread_REG			0xFF //bit-wise AND this with the reg number for register read
+#define SPIread_BYTE2		0x00
+#define REG_BYTES_LEN		1
+
+class MC3479Class{
+public:
+/*
+ * Class Variables
+ */
+	SPI_HandleTypeDef  * _SPI1;
+	I2C_TypeDef		   * _I2C1;
+	GPIO_TypeDef 	   * _CSN_GPIO;
+	uint16_t _CSN_PIN;
+	uint8_t I2C_DEVICE_ID;
+	uint8_t I2C_writeId;
+	uint8_t I2C_readId;
+
+
+	//uint8_t SAMPLE_RATE;
+
+
+/*
+ * MC3479Class Function-Headers
+ */
+	// Set the MC3479's I2C object and initialize the device I
+	bool setSerialI2C(I2C_TypeDef * i2c, uint8_t devId);
+
+	// Set the MC3479's SPI object
+	bool setSerialSPI(SPI_HandleTypeDef * spi,GPIO_TypeDef * csn_GPIO, uint16_t csn_PIN );
+
+	// Read from a register using SPI
+	bool SPI_readRegister(uint8_t reg, uint8_t* data);
+
+	// Write to a register using SPI
+	uint8_t SPI_writeRegister(uint8_t reg, uint8_t data);
+
+	// Read from a register using SPI
+	bool burstSPI_readRegister(uint8_t reg, uint8_t* data);
+
+	// Write to a register using SPI
+	bool burstSPI_writeRegister(uint8_t reg, uint8_t data);
+
+	// Read from a register using I2C
+	uint8_t I2C_readRegister(uint8_t reg, uint8_t* data);
+
+	// Write to a register using I2C
+	uint8_t I2C_writeRegister(uint8_t reg, uint8_t data);
+
+	// Perform the initial MC3479 hard-coded configuration
+	void configAccelerometer();
+
+
+	// Set the accelerometer's sample rate from 50-2000Hz
+	uint8_t setSampleRate(uint8_t rate);
+
+	// return the uint8_t sample rate code set in the accelerometer
+	uint8_t getSampleRate();
+
+	/*
+	 * TODO: Additional headers
+	 * get device status
+	 * get Motion IRQ status
+	 * get FIFO pointer
+	 * get FIFO status
+	 * getFIFO IRQ status
+	 *
+	 */
+
+
+
+};
+
+
+
+
+
+//Initialize a class to be used whenever this library is used (allows for easier referencing, similar to Arduino libraries)
+extern MC3479Class MC3479;
+
 
 
 
