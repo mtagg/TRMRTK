@@ -5,8 +5,9 @@
  *      Author: mmmta
  */
 
-#include "../Inc/MP6543B.h"
+#include "MP6543H.h"
 
+MP6543HClass MP6543H;
 
 
 

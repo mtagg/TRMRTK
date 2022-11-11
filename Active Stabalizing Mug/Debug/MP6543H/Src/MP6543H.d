@@ -1,5 +1,5 @@
-MP6543B/Src/MP6543B.o: ../MP6543B/Src/MP6543B.cpp \
- ../MP6543B/Src/../Inc/MP6543B.h ../Core/Inc/main.h \
+MP6543H/Src/MP6543H.o: ../MP6543H/Src/MP6543H.cpp \
+ S:/Capstone/Firmware/Active\ Stabalizing\ Mug/MP6543H/Inc/MP6543H.h \
  ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal.h \
  ../Core/Inc/stm32f1xx_hal_conf.h \
  ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_rcc.h \
@@ -29,8 +29,7 @@ MP6543B/Src/MP6543B.o: ../MP6543B/Src/MP6543B.cpp \
  ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_tim.h \
  ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_tim_ex.h \
  ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_uart.h
-../MP6543B/Src/../Inc/MP6543B.h:
-../Core/Inc/main.h:
+S:/Capstone/Firmware/Active\ Stabalizing\ Mug/MP6543H/Inc/MP6543H.h:
 ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal.h:
 ../Core/Inc/stm32f1xx_hal_conf.h:
 ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_rcc.h:

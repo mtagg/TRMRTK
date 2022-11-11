@@ -266,9 +266,11 @@
 /*
  * FIFO CONTROL REGISTER 2, SAMPLE RATE REGISTER 2 (0X30) MACROS (P66-P67)
  * CONTROLS THE BEHAVIOR WHEN USING FIFO BURST MODE
- * *****************************************************
- * TODO: DO WE NEED TO USE BURST MODE FOR OUR APPLICATION??
  */
+
+#define ENABLE_WRAP_N		0x10
+#define SELECT_WRAP_ADDR 	0x20 //includes accel flags/interrupts
+#define FIFO_BURST			0x80 //Include to allow multiple samples per burst
 
 /*
  * COMMUNICATION CONTROL REGISTER (0X31) MACROS (P68)
@@ -390,53 +392,45 @@ public:
 	uint8_t I2C_readId;
 
 
-	//uint8_t SAMPLE_RATE;
-
-
 /*
  * MC3479Class Function-Headers
  */
 	// Set the MC3479's I2C object and initialize the device I
 	bool setSerialI2C(I2C_TypeDef * i2c, uint8_t devId);
-
 	// Set the MC3479's SPI object
 	bool setSerialSPI(SPI_HandleTypeDef * spi,GPIO_TypeDef * csn_GPIO, uint16_t csn_PIN );
-
 	// Read from a register using SPI
 	bool SPI_readRegister(uint8_t reg, uint8_t* data);
-
 	// Write to a register using SPI
 	uint8_t SPI_writeRegister(uint8_t reg, uint8_t data);
-
 	// Read from a register using SPI
-	bool burstSPI_readRegister(uint8_t reg, uint8_t* data);
-
+	bool burstSPI_readRegister(uint8_t reg, uint8_t* data, uint8_t reg_count);
 	// Write to a register using SPI
-	bool burstSPI_writeRegister(uint8_t reg, uint8_t data);
-
+	bool burstSPI_writeRegister(uint8_t reg, uint8_t data, uint8_t reg_count);
 	// Read from a register using I2C
 	uint8_t I2C_readRegister(uint8_t reg, uint8_t* data);
-
 	// Write to a register using I2C
 	uint8_t I2C_writeRegister(uint8_t reg, uint8_t data);
-
 	// Perform the initial MC3479 hard-coded configuration
 	void configAccelerometer();
-
-
 	// Set the accelerometer's sample rate from 50-2000Hz
-	uint8_t setSampleRate(uint8_t rate);
+	bool setSampleRate(uint8_t rate);
+	bool getXYZ(uint8_t* xData, uint8_t* yData, uint8_t* zData);
+	uint8_t getMotionFlagStatus();
+	uint8_t getMotionIrqStatus();
+	bool clearMotionIrqStatus();
+	uint8_t getFifoIrqStatus();
 
-	// return the uint8_t sample rate code set in the accelerometer
-	uint8_t getSampleRate();
+
 
 	/*
 	 * TODO: Additional headers
-	 * get device status
-	 * get Motion IRQ status
-	 * get FIFO pointer
-	 * get FIFO status
-	 * getFIFO IRQ status
+	 * get FIFO pointer??
+	 * get FIFO status??
+	 * Sleep Mode enable
+	 * Idle Mode enable
+	 * WakeUp
+	 *
 	 *
 	 */
 

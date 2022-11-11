@@ -5,7 +5,7 @@
  *      Author: mmmta
  */
 //TODO: Add try/except or assertion clauses to all methods
-#include "../Inc/MC3479.h"
+#include "MC3479.h"
 
 
 MC3479Class MC3479;
@@ -37,8 +37,8 @@ bool MC3479Class::SPI_readRegister(uint8_t reg,  uint8_t* data)
 	spiBytes[0] = SPIread_REG && reg;
 	spiBytes[1] = SPIread_BYTE2;
 	HAL_GPIO_WritePin(this->_CSN_GPIO, this->_CSN_PIN, GPIO_PIN_RESET);
-	HAL_SPI_Transmit(_SPI1, spiBytes, sizeof(spiBytes), 10);
-	HAL_SPI_Receive(_SPI1, data, REG_BYTES_LEN, 10);
+	HAL_SPI_Transmit(this->_SPI1, spiBytes, sizeof(spiBytes), 10);
+	HAL_SPI_Receive(this->_SPI1, data, REG_BYTES_LEN, 10);
 	HAL_GPIO_WritePin(this->_CSN_GPIO, this->_CSN_PIN, GPIO_PIN_SET);
 	return 1;
 }
@@ -51,24 +51,40 @@ uint8_t MC3479Class::SPI_writeRegister(uint8_t reg, uint8_t data)
 	spiBytes[0] = SPIwrite_REG && reg;
 	spiBytes[1] = data;
 	HAL_GPIO_WritePin(this->_CSN_GPIO, this->_CSN_PIN, GPIO_PIN_RESET);
-	HAL_SPI_Transmit(_SPI1, spiBytes, sizeof(spiBytes), 10);
+	HAL_SPI_Transmit(this->_SPI1, spiBytes, sizeof(spiBytes), 10);
 	HAL_GPIO_WritePin(this->_CSN_GPIO, this->_CSN_PIN, GPIO_PIN_SET);
 
 	// Read back the register and return the bytes:
 	uint8_t regReadBack = 0;
-	MC3479.SPI_readRegister(reg, &regReadBack);
+	MC3479Class::SPI_readRegister(reg, &regReadBack);
 	return regReadBack;
 }
 
 // Read from a register using SPI
-bool burstSPI_readRegister(uint8_t reg, GPIO_TypeDef csn_GPIO, uint16_t csn_PIN, uint8_t* data)
+bool MC3479Class::burstSPI_readRegister(uint8_t reg, uint8_t* data, uint8_t reg_count)
 {
+	uint8_t spiBytes[2];
+	spiBytes[0] = SPIread_REG && reg;
+	spiBytes[1] = SPIread_BYTE2;
+	HAL_GPIO_WritePin(this->_CSN_GPIO, this->_CSN_PIN, GPIO_PIN_RESET);
+	HAL_SPI_Transmit(this->_SPI1, spiBytes, sizeof(spiBytes), 10);
+
+	for (uint8_t i=0; i<reg_count; i++)
+	{
+		//TODO: Validate that data[0] will be Xdata LSB
+		HAL_SPI_Receive(this->_SPI1, &data[i], REG_BYTES_LEN, 10);
+	}
+	HAL_GPIO_WritePin(this->_CSN_GPIO, this->_CSN_PIN, GPIO_PIN_SET);
 	return 1;
+
 }
 
-// Write to a register using SPI
-bool burstSPI_writeRegister(uint8_t reg, GPIO_TypeDef csn_GPIO, uint16_t csn_PIN, uint8_t data)
+// Burst-Write to a register using SPI
+bool MC3479Class::burstSPI_writeRegister(uint8_t reg, uint8_t data, uint8_t reg_count)
 {
+	// TODO: Decide if this is useful.
+	// Can only see us needing this function in the casae where we need to set multiple registers on the fly.
+	// TODO: Possibly could use this for configuration if we run out of flash???
 	return 1;
 }
 
@@ -166,8 +182,10 @@ void MC3479Class::configAccelerometer(){
 		MC3479Class::SPI_writeRegister(MC3479_FIFO_TH, data);
 
 		// Register 0x30 (FIFO Control 2, Sample Rate 2)
-		// Controls burst mode
-		// TODO: Do we need burst read with SPI??
+		//Burst-read cycle that includes XOUT[15:0], YOUT[15:0],
+		//ZOUT[15:0], annd NOTTTT: STATUS[7:0], and INTR_STATUS[7:0]:
+		data = 0xFF & 0x00;
+		MC3479Class::SPI_writeRegister(MC3479_FIFO_CTRL2_SR2, data);
 
 		// Register 0x31 (Communication Control)
 		data = 0xFF & 0x00; //0x14 interrupts are cleared simultaneously, 4bit SPI, default Interrupt pins
@@ -225,7 +243,8 @@ void MC3479Class::configAccelerometer(){
 		MC3479Class::SPI_writeRegister(MC3479_TIMER_CTRL, data);
 
 		// Register 0x4B (Read Count Register)
-		//TODO: Configure spi Burst-mode and this register if needed after initial testing.
+		data = 0xFF & 0x06; // default 6 reads when register 0x30 bit 7(FIFO_BURST) is enabled
+		MC3479Class::SPI_writeRegister(MC3479_RD_CNT, data);
 
 
 
@@ -300,6 +319,58 @@ void MC3479Class::configAccelerometer(){
 	}
 	return;
 }
+
+// Set the accelerometer's sample rate from 50-2000Hz
+bool MC3479Class::setSampleRate(uint8_t rate)
+{
+		uint8_t data = 0xFF & rate; // sample x,y,z @ 100Hz
+		MC3479Class::SPI_writeRegister(MC3479_SR, data);
+		return 1;
+}
+
+bool MC3479Class::getXYZ(uint8_t* xData, uint8_t* yData, uint8_t* zData)
+{
+	uint8_t Buffer[8];
+	MC3479Class::burstSPI_readRegister(MC3479_XOUT_EX_L, &Buffer[0], 6);
+	xData[0] = Buffer[0];
+	xData[1] = Buffer[1];
+	yData[0] = Buffer[2];
+	yData[1] = Buffer[3];
+	zData[0] = Buffer[4];
+	zData[1] = Buffer[5];
+	return 1;
+}
+
+uint8_t MC3479Class::getMotionFlagStatus()
+{
+	uint8_t status;
+	MC3479Class::SPI_readRegister(MC3479_STATUS, &status);
+	return status;
+}
+
+uint8_t MC3479Class::getMotionIrqStatus()
+{
+	uint8_t status;
+	MC3479Class::SPI_readRegister(MC3479_INTR_STAT, &status);
+	return status;
+}
+
+bool MC3479Class::clearMotionIrqStatus()
+{
+	uint8_t clear = 0x00;
+	MC3479Class::SPI_writeRegister(MC3479_INTR_STAT, clear);
+	return 1;
+}
+
+uint8_t MC3479Class::getFifoIrqStatus()
+{
+	uint8_t status;
+	MC3479Class::SPI_readRegister(MC3479_FIFO_STAT, &status);
+	return status;
+}
+
+
+
 
 
 

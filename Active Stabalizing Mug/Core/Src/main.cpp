@@ -18,12 +18,14 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
-#include "MP6543B.h"
-#include "MC3479.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include "MC3479.h"
 
+#include "MP6543H.h"
+
+#include "controlSystem.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -33,6 +35,8 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
+#define DEBUG_ENABLED
+#define TEST_CODE_ENABLED
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -50,7 +54,6 @@ SPI_HandleTypeDef hspi1;
 
 TIM_HandleTypeDef htim1;
 
-UART_HandleTypeDef huart1;
 UART_HandleTypeDef huart2;
 UART_HandleTypeDef huart3;
 
@@ -65,7 +68,6 @@ static void MX_ADC1_Init(void);
 static void MX_ADC2_Init(void);
 static void MX_SPI1_Init(void);
 static void MX_TIM1_Init(void);
-static void MX_USART1_UART_Init(void);
 static void MX_USART2_UART_Init(void);
 static void MX_USART3_UART_Init(void);
 static void MX_I2C1_Init(void);
@@ -110,20 +112,31 @@ int main(void)
   MX_ADC2_Init();
   MX_SPI1_Init();
   MX_TIM1_Init();
-  MX_USART1_UART_Init();
   MX_USART2_UART_Init();
   MX_USART3_UART_Init();
   MX_I2C1_Init();
   /* USER CODE BEGIN 2 */
 
   //Configure Accelerometer using PA4 for CSn, in SPI mode
-  MC3479.setSerialSPI(&hspi1, GPIOA, GPIO_PIN_4);
+  MC3479.setSerialSPI(&hspi1, GPIOA, SPI1_CSn_Pin);
   MC3479.configAccelerometer();
-
+  uint8_t xData [2];
+  uint8_t yData [2];
+  uint8_t zData [2];
+  uint8_t motionFlagStatus;
+  uint8_t motionIrqStatus;
+  uint8_t newLine = '\n';
+//  uint8_t* newLinePtr = newLine;
 
   //TIMER1 was set to 255 bits per period, at 8MHz, this is ~ 31kHz
   //We can set the PWM duty cycle% from 0-255 bits of each cycle where n/255 * 100% = PWM duty cycle
-  int16_t CH1_PWM_SPEED = 0; //PWM Value from 0 to 255
+  int8_t MP6543B_PWM1_SPEED = 0; //PWM Value from 0 to 255
+  int inactivity_counter = 0;
+  bool x_inactive = false;
+  bool x_inactive = true;
+  int16_t x_nominal = 0;
+  int16_t y_nominal = 0;
+
 
   /* USER CODE END 2 */
 
@@ -131,8 +144,27 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
+
+	  MC3479.getXYZ(xData, yData, zData);
+	  motionFlagStatus = MC3479.getMotionFlagStatus();
+	  motionIrqStatus = MC3479.getMotionIrqStatus();
+	  MC3479.clearMotionIrqStatus();
+
+#ifdef DEBUG_ENABLED
+	  HAL_UART_Transmit(&huart2, &xData[0], sizeof(xData), 10);
+	  HAL_UART_Transmit(&huart2, &yData[0], sizeof(yData), 10);
+	  HAL_UART_Transmit(&huart2, &zData[0], sizeof(zData), 10);
+	  HAL_UART_Transmit(&huart2, &motionFlagStatus, sizeof(motionFlagStatus), 10);
+	  HAL_UART_Transmit(&huart2, &motionIrqStatus, sizeof(motionIrqStatus), 10);
+	  HAL_UART_Transmit(&huart2, &newLine, sizeof(newLine), 10);
+#endif
+
+#ifdef TEST_CODE_ENABLED
 	  HAL_TIMEx_PWMN_Start(&htim1, TIM_CHANNEL_1);
-	  TIM1->CCR1 = CH1_PWM_SPEED;
+	  TIM1->CCR1 = MP6543B_PWM1_SPEED++;
+	  HAL_Delay(100);
+#endif
+
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -264,7 +296,7 @@ static void MX_ADC2_Init(void)
 
   /** Configure Regular Channel
   */
-  sConfig.Channel = ADC_CHANNEL_1;
+  sConfig.Channel = ADC_CHANNEL_7;
   sConfig.Rank = ADC_REGULAR_RANK_1;
   sConfig.SamplingTime = ADC_SAMPLETIME_1CYCLE_5;
   if (HAL_ADC_ConfigChannel(&hadc2, &sConfig) != HAL_OK)
@@ -293,7 +325,7 @@ static void MX_I2C1_Init(void)
 
   /* USER CODE END I2C1_Init 1 */
   hi2c1.Instance = I2C1;
-  hi2c1.Init.ClockSpeed = 400000;
+  hi2c1.Init.ClockSpeed = 100000;
   hi2c1.Init.DutyCycle = I2C_DUTYCYCLE_2;
   hi2c1.Init.OwnAddress1 = 0;
   hi2c1.Init.AddressingMode = I2C_ADDRESSINGMODE_7BIT;
@@ -410,10 +442,6 @@ static void MX_TIM1_Init(void)
   {
     Error_Handler();
   }
-  if (HAL_TIM_PWM_ConfigChannel(&htim1, &sConfigOC, TIM_CHANNEL_3) != HAL_OK)
-  {
-    Error_Handler();
-  }
   sBreakDeadTimeConfig.OffStateRunMode = TIM_OSSR_DISABLE;
   sBreakDeadTimeConfig.OffStateIDLEMode = TIM_OSSI_DISABLE;
   sBreakDeadTimeConfig.LockLevel = TIM_LOCKLEVEL_OFF;
@@ -429,39 +457,6 @@ static void MX_TIM1_Init(void)
 
   /* USER CODE END TIM1_Init 2 */
   HAL_TIM_MspPostInit(&htim1);
-
-}
-
-/**
-  * @brief USART1 Initialization Function
-  * @param None
-  * @retval None
-  */
-static void MX_USART1_UART_Init(void)
-{
-
-  /* USER CODE BEGIN USART1_Init 0 */
-
-  /* USER CODE END USART1_Init 0 */
-
-  /* USER CODE BEGIN USART1_Init 1 */
-
-  /* USER CODE END USART1_Init 1 */
-  huart1.Instance = USART1;
-  huart1.Init.BaudRate = 115200;
-  huart1.Init.WordLength = UART_WORDLENGTH_8B;
-  huart1.Init.StopBits = UART_STOPBITS_1;
-  huart1.Init.Parity = UART_PARITY_NONE;
-  huart1.Init.Mode = UART_MODE_TX_RX;
-  huart1.Init.HwFlowCtl = UART_HWCONTROL_NONE;
-  huart1.Init.OverSampling = UART_OVERSAMPLING_16;
-  if (HAL_UART_Init(&huart1) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  /* USER CODE BEGIN USART1_Init 2 */
-
-  /* USER CODE END USART1_Init 2 */
 
 }
 
@@ -547,50 +542,64 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOB_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13|GPIO_PIN_14|GPIO_PIN_15, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOC, LEDR_Out_Pin|LEDG_Out_Pin|LEDB_Out_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOD, GPIO_PIN_0|GPIO_PIN_1, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(LED_Power_OSC_IN_GPIO_Port, LED_Power_OSC_IN_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOA, SPI1_CSn_Pin|MP6543B_DIR_p4_Pin|MP6543B_nBRAKE_p6_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOB, MP6543B_DIR_X_Pin|MP6543B_nBRAKE_X_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_12|MP6543B_nSLEEP_p24_Pin|MP6543B_OC_ADJ_p17_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOA, MP6543B_DIR_Y_Pin|MP6543B_nSLEEP_Y_Pin|MP6543B_nBRAKE_Y_Pin|SPI1_CSn_Pin, GPIO_PIN_RESET);
 
-  /*Configure GPIO pins : PC13 PC14 PC15 */
-  GPIO_InitStruct.Pin = GPIO_PIN_13|GPIO_PIN_14|GPIO_PIN_15;
+  /*Configure GPIO pins : LEDR_Out_Pin LEDG_Out_Pin LEDB_Out_Pin */
+  GPIO_InitStruct.Pin = LEDR_Out_Pin|LEDG_Out_Pin|LEDB_Out_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : PD0 PD1 */
-  GPIO_InitStruct.Pin = GPIO_PIN_0|GPIO_PIN_1;
+  /*Configure GPIO pin : LED_Power_OSC_IN_Pin */
+  GPIO_InitStruct.Pin = LED_Power_OSC_IN_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(GPIOD, &GPIO_InitStruct);
+  HAL_GPIO_Init(LED_Power_OSC_IN_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : SPI1_CSn_Pin MP6543B_DIR_p4_Pin MP6543B_nBRAKE_p6_Pin */
-  GPIO_InitStruct.Pin = SPI1_CSn_Pin|MP6543B_DIR_p4_Pin|MP6543B_nBRAKE_p6_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  /*Configure GPIO pin : LED_Button_In_OSC_OUT_Pin */
+  GPIO_InitStruct.Pin = LED_Button_In_OSC_OUT_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+  HAL_GPIO_Init(LED_Button_In_OSC_OUT_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : SPI1_INTN2_p11_Pin SPI1_INTN1_p12_Pin PB2 MP6543B_nFAULT_p20_Pin */
-  GPIO_InitStruct.Pin = SPI1_INTN2_p11_Pin|SPI1_INTN1_p12_Pin|GPIO_PIN_2|MP6543B_nFAULT_p20_Pin;
+  /*Configure GPIO pin : nTILT_BUTTON_Pin */
+  GPIO_InitStruct.Pin = nTILT_BUTTON_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(nTILT_BUTTON_GPIO_Port, &GPIO_InitStruct);
+
+  /*Configure GPIO pins : MP6543B_nFAULT_Y_Pin MP6543B_nFAULT_X_Pin MP6543B_nSLEEP_X_Pin MC3479_INTN1_Pin
+                           MC3479_INTN2_Pin */
+  GPIO_InitStruct.Pin = MP6543B_nFAULT_Y_Pin|MP6543B_nFAULT_X_Pin|MP6543B_nSLEEP_X_Pin|MC3479_INTN1_Pin
+                          |MC3479_INTN2_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : PB12 MP6543B_nSLEEP_p24_Pin MP6543B_OC_ADJ_p17_Pin */
-  GPIO_InitStruct.Pin = GPIO_PIN_12|MP6543B_nSLEEP_p24_Pin|MP6543B_OC_ADJ_p17_Pin;
+  /*Configure GPIO pins : MP6543B_DIR_X_Pin MP6543B_nBRAKE_X_Pin */
+  GPIO_InitStruct.Pin = MP6543B_DIR_X_Pin|MP6543B_nBRAKE_X_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+
+  /*Configure GPIO pins : MP6543B_DIR_Y_Pin MP6543B_nSLEEP_Y_Pin MP6543B_nBRAKE_Y_Pin SPI1_CSn_Pin */
+  GPIO_InitStruct.Pin = MP6543B_DIR_Y_Pin|MP6543B_nSLEEP_Y_Pin|MP6543B_nBRAKE_Y_Pin|SPI1_CSn_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
   /*Configure peripheral I/O remapping */
   __HAL_AFIO_REMAP_PD01_ENABLE();

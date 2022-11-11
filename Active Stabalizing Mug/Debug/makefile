@@ -9,16 +9,17 @@ RM := rm -rf
 
 # All of the sources participating in the build are defined here
 -include sources.mk
--include MP6543B/Src/Debug/MP6543B/Src/subdir.mk
--include MP6543B/Src/Debug/MC3479/Src/subdir.mk
--include MP6543B/Src/Debug/Drivers/STM32F1xx_HAL_Driver/Src/subdir.mk
--include MP6543B/Src/Debug/Core/Startup/subdir.mk
--include MP6543B/Src/Debug/Core/Src/subdir.mk
--include MP6543B/Src/subdir.mk
+-include MP6543H/Src/Debug/MP6543B/Src/subdir.mk
+-include MP6543H/Src/Debug/MC3479/Src/subdir.mk
+-include MP6543H/Src/Debug/Drivers/STM32F1xx_HAL_Driver/Src/subdir.mk
+-include MP6543H/Src/Debug/Core/Startup/subdir.mk
+-include MP6543H/Src/Debug/Core/Src/subdir.mk
+-include MP6543H/Src/subdir.mk
 -include MC3479/Src/subdir.mk
 -include Drivers/STM32F1xx_HAL_Driver/Src/subdir.mk
 -include Core/Startup/subdir.mk
 -include Core/Src/subdir.mk
+-include ControlSystem/Src/subdir.mk
 -include objects.mk
 
 ifneq ($(MAKECMDGOALS),clean)

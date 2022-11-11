@@ -1,4 +1,5 @@
-Core/Src/main.o: ../Core/Src/main.cpp ../Core/Inc/main.h \
+ControlSystem/Src/controlSystem.o: ../ControlSystem/Src/controlSystem.cpp \
+ S:/Capstone/Firmware/Active\ Stabalizing\ Mug/ControlSystem/Inc/controlSystem.h \
  ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal.h \
  ../Core/Inc/stm32f1xx_hal_conf.h \
  ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_rcc.h \
@@ -27,11 +28,8 @@ Core/Src/main.o: ../Core/Src/main.cpp ../Core/Inc/main.h \
  ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_spi.h \
  ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_tim.h \
  ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_tim_ex.h \
- ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_uart.h \
- S:/Capstone/Firmware/Active\ Stabalizing\ Mug/MC3479/Inc/MC3479.h \
- S:/Capstone/Firmware/Active\ Stabalizing\ Mug/MP6543H/Inc/MP6543H.h \
- S:/Capstone/Firmware/Active\ Stabalizing\ Mug/ControlSystem/Inc/controlSystem.h
-../Core/Inc/main.h:
+ ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_uart.h
+S:/Capstone/Firmware/Active\ Stabalizing\ Mug/ControlSystem/Inc/controlSystem.h:
 ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal.h:
 ../Core/Inc/stm32f1xx_hal_conf.h:
 ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_rcc.h:
@@ -61,6 +59,3 @@ Core/Src/main.o: ../Core/Src/main.cpp ../Core/Inc/main.h \
 ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_tim.h:
 ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_tim_ex.h:
 ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_uart.h:
-S:/Capstone/Firmware/Active\ Stabalizing\ Mug/MC3479/Inc/MC3479.h:
-S:/Capstone/Firmware/Active\ Stabalizing\ Mug/MP6543H/Inc/MP6543H.h:
-S:/Capstone/Firmware/Active\ Stabalizing\ Mug/ControlSystem/Inc/controlSystem.h:

@@ -31,14 +31,15 @@ CPP_DEPS :=
 
 # Every subdirectory with source files must be described here
 SUBDIRS := \
+ControlSystem/Src \
 Core/Src \
 Core/Startup \
 Drivers/STM32F1xx_HAL_Driver/Src \
 MC3479/Src \
-MP6543B/Src/Debug/Core/Src \
-MP6543B/Src/Debug/Core/Startup \
-MP6543B/Src/Debug/Drivers/STM32F1xx_HAL_Driver/Src \
-MP6543B/Src/Debug/MC3479/Src \
-MP6543B/Src/Debug/MP6543B/Src \
-MP6543B/Src \
+MP6543H/Src/Debug/Core/Src \
+MP6543H/Src/Debug/Core/Startup \
+MP6543H/Src/Debug/Drivers/STM32F1xx_HAL_Driver/Src \
+MP6543H/Src/Debug/MC3479/Src \
+MP6543H/Src/Debug/MP6543B/Src \
+MP6543H/Src \
 
