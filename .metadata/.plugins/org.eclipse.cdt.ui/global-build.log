@@ -1,13 +1,13 @@
-09:33:45 **** Incremental Build of configuration Debug for project Active Stabalizing Mug ****
+16:20:55 **** Incremental Build of configuration Debug for project Active Stabalizing Mug ****
 make -j12 all 
-arm-none-eabi-g++ "../Core/Src/main.cpp" -mcpu=cortex-m3 -std=gnu++14 -g3 -DDEBUG -DUSE_HAL_DRIVER -DSTM32F103xB -c -I../Core/Inc -I../Drivers/STM32F1xx_HAL_Driver/Inc/Legacy -I../Drivers/STM32F1xx_HAL_Driver/Inc -I../Drivers/CMSIS/Device/ST/STM32F1xx/Include -I../Drivers/CMSIS/Include -I"S:/Capstone/Firmware/Active Stabalizing Mug/MC3479/Inc" -I"S:/Capstone/Firmware/Active Stabalizing Mug/MP6543B/Inc" -O0 -ffunction-sections -fdata-sections -fno-exceptions -fno-rtti -fno-use-cxa-atexit -Wall -fstack-usage -MMD -MP -MF"Core/Src/main.d" -MT"Core/Src/main.o" --specs=nano.specs -mfloat-abi=soft -mthumb -o "Core/Src/main.o"
+arm-none-eabi-g++ "../ControlSystem/Src/controlSystem.cpp" -mcpu=cortex-m3 -std=gnu++14 -g3 -DDEBUG -DUSE_HAL_DRIVER -DSTM32F103xB -c -I../Core/Inc -I../Drivers/STM32F1xx_HAL_Driver/Inc/Legacy -I../Drivers/STM32F1xx_HAL_Driver/Inc -I../Drivers/CMSIS/Device/ST/STM32F1xx/Include -I../Drivers/CMSIS/Include -I"S:/Capstone/Firmware/Active Stabalizing Mug/MC3479/Inc" -I"S:/Capstone/Firmware/Active Stabalizing Mug/MP6543H/Inc" -I"S:/Capstone/Firmware/Active Stabalizing Mug/ControlSystem/Inc" -O0 -ffunction-sections -fdata-sections -fno-exceptions -fno-rtti -fno-use-cxa-atexit -Wall -fstack-usage -MMD -MP -MF"ControlSystem/Src/controlSystem.d" -MT"ControlSystem/Src/controlSystem.o" --specs=nano.specs -mfloat-abi=soft -mthumb -o "ControlSystem/Src/controlSystem.o"
 arm-none-eabi-g++ -o "Active Stabalizing Mug.elf" @"objects.list"   -mcpu=cortex-m3 -T"S:\Capstone\Firmware\Active Stabalizing Mug\STM32F103C8TX_FLASH.ld" --specs=nosys.specs -Wl,-Map="Active Stabalizing Mug.map" -Wl,--gc-sections -static --specs=nano.specs -mfloat-abi=soft -mthumb -Wl,--start-group -lc -lm -lstdc++ -lsupc++ -Wl,--end-group
 Finished building target: Active Stabalizing Mug.elf
  
 arm-none-eabi-size   Active\ Stabalizing\ Mug.elf 
 arm-none-eabi-objdump -h -S  Active\ Stabalizing\ Mug.elf  > "Active Stabalizing Mug.list"
    text	   data	    bss	    dec	    hex	filename
-  16628	     20	   2132	  18780	   495c	Active Stabalizing Mug.elf
+  17472	     20	   2068	  19560	   4c68	Active Stabalizing Mug.elf
 Finished building: default.size.stdout
  
 Finished building: Active Stabalizing Mug.list
