@@ -373,6 +373,8 @@
  * TODO do we want to configure burst writes (p38)
  * TODO GET ALL MACROS FROM DATASHEET
  */
+
+#define _SPI_COM_ENABLED
 #define SPIwrite_REG		0x7F //bit-wise AND this with the reg number for register write
 #define SPIread_REG			0xFF //bit-wise AND this with the reg number for register read
 #define SPIread_BYTE2		0x00

@@ -1,0 +1,2 @@
+../MP6543H/Src/MP6543H.cpp:14:6:bool MP6543HClass::x_configMotorController(uint16_t, TIM_HandleTypeDef*, GPIO_TypeDef*, uint16_t, GPIO_TypeDef*, uint16_t, GPIO_TypeDef*, uint16_t, GPIO_TypeDef*, uint16_t)	24	static
+../MP6543H/Src/MP6543H.cpp:24:6:bool MP6543HClass::y_configMotorController(uint16_t, TIM_HandleTypeDef*, GPIO_TypeDef*, uint16_t, GPIO_TypeDef*, uint16_t, GPIO_TypeDef*, uint16_t, GPIO_TypeDef*, uint16_t)	24	static

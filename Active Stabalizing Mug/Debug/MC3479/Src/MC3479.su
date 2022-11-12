@@ -7,9 +7,9 @@
 ../MC3479/Src/MC3479.cpp:92:9:uint8_t MC3479Class::I2C_readRegister(uint8_t, uint8_t*)	24	static
 ../MC3479/Src/MC3479.cpp:99:9:uint8_t MC3479Class::I2C_writeRegister(uint8_t, uint8_t)	16	static
 ../MC3479/Src/MC3479.cpp:106:6:void MC3479Class::configAccelerometer()	24	static
-../MC3479/Src/MC3479.cpp:324:6:bool MC3479Class::setSampleRate(uint8_t)	24	static
-../MC3479/Src/MC3479.cpp:331:6:bool MC3479Class::getXYZ(uint8_t*, uint8_t*, uint8_t*)	32	static
-../MC3479/Src/MC3479.cpp:344:9:uint8_t MC3479Class::getMotionFlagStatus()	24	static
-../MC3479/Src/MC3479.cpp:351:9:uint8_t MC3479Class::getMotionIrqStatus()	24	static
-../MC3479/Src/MC3479.cpp:358:6:bool MC3479Class::clearMotionIrqStatus()	24	static
-../MC3479/Src/MC3479.cpp:365:9:uint8_t MC3479Class::getFifoIrqStatus()	24	static
+../MC3479/Src/MC3479.cpp:326:6:bool MC3479Class::setSampleRate(uint8_t)	24	static
+../MC3479/Src/MC3479.cpp:333:6:bool MC3479Class::getXYZ(uint8_t*, uint8_t*, uint8_t*)	32	static
+../MC3479/Src/MC3479.cpp:346:9:uint8_t MC3479Class::getMotionFlagStatus()	24	static
+../MC3479/Src/MC3479.cpp:353:9:uint8_t MC3479Class::getMotionIrqStatus()	24	static
+../MC3479/Src/MC3479.cpp:360:6:bool MC3479Class::clearMotionIrqStatus()	24	static
+../MC3479/Src/MC3479.cpp:367:9:uint8_t MC3479Class::getFifoIrqStatus()	24	static

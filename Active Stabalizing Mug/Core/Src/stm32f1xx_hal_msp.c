@@ -129,11 +129,11 @@ void HAL_ADC_MspInit(ADC_HandleTypeDef* hadc)
     PB0     ------> ADC2_IN8
     PB1     ------> ADC2_IN9
     */
-    GPIO_InitStruct.Pin = MP6543B_SOA_X_Pin|MP6543B_SOB_X_Pin|MP6543B_SOC_X_Pin|MP6543B_SOA_Y_Pin;
+    GPIO_InitStruct.Pin = MP6543H_SOA_X_Pin|MP6543H_SOB_X_Pin|MP6543H_SOC_X_Pin|MP6543H_SOA_Y_Pin;
     GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
     HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
-    GPIO_InitStruct.Pin = MP6543B_SOB_Y_Pin|MP6543B_SOC_Y_Pin;
+    GPIO_InitStruct.Pin = MP6543H_SOB_Y_Pin|MP6543H_SOC_Y_Pin;
     GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
     HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
@@ -185,9 +185,9 @@ void HAL_ADC_MspDeInit(ADC_HandleTypeDef* hadc)
     PB0     ------> ADC2_IN8
     PB1     ------> ADC2_IN9
     */
-    HAL_GPIO_DeInit(GPIOA, MP6543B_SOA_X_Pin|MP6543B_SOB_X_Pin|MP6543B_SOC_X_Pin|MP6543B_SOA_Y_Pin);
+    HAL_GPIO_DeInit(GPIOA, MP6543H_SOA_X_Pin|MP6543H_SOB_X_Pin|MP6543H_SOC_X_Pin|MP6543H_SOA_Y_Pin);
 
-    HAL_GPIO_DeInit(GPIOB, MP6543B_SOB_Y_Pin|MP6543B_SOC_Y_Pin);
+    HAL_GPIO_DeInit(GPIOB, MP6543H_SOB_Y_Pin|MP6543H_SOC_Y_Pin);
 
   /* USER CODE BEGIN ADC2_MspDeInit 1 */
 
@@ -371,7 +371,7 @@ void HAL_TIM_MspPostInit(TIM_HandleTypeDef* htim)
     PA8     ------> TIM1_CH1
     PA9     ------> TIM1_CH2
     */
-    GPIO_InitStruct.Pin = MP6543B_PWM_X_Pin|MP6543B_PWM_Y_Pin;
+    GPIO_InitStruct.Pin = MP6543H_PWM_X_Pin|MP6543H_PWM_Y_Pin;
     GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
     GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
     HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);

@@ -105,7 +105,9 @@ uint8_t MC3479Class::I2C_writeRegister(uint8_t reg, uint8_t data)
 // Perform the initial MC3479 hard-coded configuration
 void MC3479Class::configAccelerometer(){
 	uint8_t data;
-	if (&_SPI1 != NULL){
+
+
+#ifdef _SPI_COM_ENABLED
 		//Configuration using SPI:
 
 		// Register 0x06 (interrupt enable)
@@ -248,7 +250,7 @@ void MC3479Class::configAccelerometer(){
 
 
 
-	}else{
+#else
 		//Configuration using I2C:
 
 		// Register 0x06 (interrupt enable)
@@ -315,8 +317,8 @@ void MC3479Class::configAccelerometer(){
 
 		// Register 0x4B (Read Count Register)
 
+#endif /* _SPI_COM_ENABLED */
 
-	}
 	return;
 }
 

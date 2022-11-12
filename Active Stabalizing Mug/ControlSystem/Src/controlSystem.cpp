@@ -9,8 +9,6 @@
 
 ControlClass ControlSystem;
 
-
-
 int16_t ControlClass::lookupAngle(int16_t z_acc, int16_t axis_acc)
 {
 
@@ -23,7 +21,7 @@ int16_t ControlClass::lookupAngle(int16_t z_acc, int16_t axis_acc)
 	double arctan_theta = (double)(axis_acc/z_acc);
 	int sign;
 
-	//convert ratio to positive
+	//convert ratio to positive for quicker LUT result
 	if (arctan_theta < 0)
 	{
 		arctan_theta *= -1;

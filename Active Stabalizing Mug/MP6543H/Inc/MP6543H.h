@@ -33,49 +33,63 @@ public:
 /*
  * Public Variables
  */
+//TODO: Finalize member variables
+
+
 
 	GPIO_TypeDef * _x_DIR_GPIO;
-	//GPIO_TypeDef * _x_PWM_GPIO;
 	GPIO_TypeDef * _x_nBRAKE_GPIO;
 	GPIO_TypeDef *_x_nSLEEP_GPIO;
 	GPIO_TypeDef *_x_nFAULT_GPIO;
-	uint8_t _x_DIR_PIN;
-	//uint8_t _x_PWM_PIN;
-	uint8_t _x_nBRAKE_PIN;
-	uint8_t _x_nSLEEP_PIN;
-	uint8_t _x_nFAULT_PIN;
+	TIM_HandleTypeDef * _x_PWM_TIMER;
+	uint16_t _x_PWM_CHANNEL;
+	uint16_t _x_DIR_PIN;
+	uint16_t _x_nBRAKE_PIN;
+	uint16_t _x_nSLEEP_PIN;
+	uint16_t _x_nFAULT_PIN;
 
 	GPIO_TypeDef * _y_DIR_GPIO;
-	//uint8_t _y_PWM_GPIO;
 	GPIO_TypeDef * _y_nBRAKE_GPIO;
 	GPIO_TypeDef * _y_nSLEEP_GPIO;
 	GPIO_TypeDef * _y_nFAULT_GPIO;
-	uint8_t _y_DIR_PIN;
-	//uint8_t _y_PWM_PIN;
-	uint8_t _y_nBRAKE_PIN;
-	uint8_t _y_nSLEEP_PIN;
-	uint8_t _y_nFAULT_PIN;
+	TIM_HandleTypeDef * _y_PWM_TIMER;
+	uint16_t _y_PWM_CHANNEL;
+	uint16_t _y_DIR_PIN;
+	uint16_t _y_nBRAKE_PIN;
+	uint16_t _y_nSLEEP_PIN;
+	uint16_t _y_nFAULT_PIN;
 
 
 
 /*
  * MP6543HGL-B-Z Function-Headers
  */
-	//x axis headers:
-	bool x_configMotorController();
+	//x-axis motor functions:
+	bool x_configMotorController(uint16_t xPwmChannel, TIM_HandleTypeDef * pwmTimer,
+									GPIO_TypeDef* xDir, uint16_t xDirPin,
+										GPIO_TypeDef* xDirBrake, uint16_t xBrakePin,
+											GPIO_TypeDef* xSleep, uint16_t xSleepPin,
+												GPIO_TypeDef* xFault, uint16_t xFaultPin);
+
 	bool x_motorSleep();
 	bool x_motorWake();
 	bool x_setDir(bool forward_polarity);
-	bool x_setPwm();
-	bool x_motorBrake();
+	bool x_setPwm(uint8_t pwm);
+	bool x_motorBrake(bool want_brake);
 	bool x_motorFault();
 
-	bool y_configMotorController();
+	//y-axis motor functions:
+	bool y_configMotorController(uint16_t yPwmChannel, TIM_HandleTypeDef * pwmTimer,
+									GPIO_TypeDef* yDir, uint16_t yDirPin,
+										GPIO_TypeDef* yDirBrake, uint16_t yBrakePin,
+											GPIO_TypeDef* ySleep, uint16_t ySleepPin,
+												GPIO_TypeDef* yFault, uint16_t yFaultPin);
+
 	bool y_motorSleep();
 	bool y_motorWake();
-	bool y_setDir(bool fwd);
-	bool y_setPwm();
-	bool y_motorBrake();
+	bool y_setDir(bool forward_polarity);
+	bool y_setPwm(uint8_t pwm);
+	bool y_motorBrake(bool want_brake);
 	bool y_motorFault();
 
 
