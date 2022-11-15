@@ -36,7 +36,7 @@
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
 #define DEBUG_ENABLED
-#define TEST_CODE_ENABLED
+//#define TEST_CODE_ENABLED
 #define INACTIVITY_THRESHOLD 1000 //value where incactivity_counter will trigger sleep/idle
 
 
@@ -146,17 +146,18 @@ int main(void)
   uint8_t newLine = '\n';
 //  uint8_t* newLinePtr = newLine;
 
+
+#ifdef TEST_CODE_ENABLED
   //TIMER1 was set to 255 bits per period, at 8MHz, this is ~ 31kHz
   //We can set the PWM duty cycle% from 0-255 bits of each cycle where n/255 * 100% = PWM duty cycle
   int8_t MP6543H_PWM1_SPEED = 0; //PWM Value from 0 to 255
 
+#endif
 // TODO: implement sleep routine
 //  int inactivity_counter = 0;
 //  bool x_inactive = false;
 //  bool y_inactive = true;]
-// TODO: implement variable x and y nominal values
-//  int16_t x_nominal = 0;
-//  int16_t y_nominal = 0;
+
   	int16_t x_theta = 0;
   	int16_t y_theta = 0;
 
@@ -167,6 +168,7 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
+
 	  MC3479.getXYZ(xData, yData, zData);
 	  x_theta = ControlSystem.normalizeTheta(xData[0], xData[1], zData[0], zData[1]);
 	  y_theta = ControlSystem.normalizeTheta(yData[0], yData[1], zData[0], zData[1]);
@@ -175,6 +177,7 @@ int main(void)
 	  MC3479.clearMotionIrqStatus();
 
 #ifdef DEBUG_ENABLED
+
 	  HAL_UART_Transmit(&huart2, &newLine, sizeof(newLine), 10);
 	  HAL_UART_Transmit(&huart2, &motionFlagStatus, sizeof(motionFlagStatus), 10);
 	  HAL_UART_Transmit(&huart2, &motionIrqStatus, sizeof(motionIrqStatus), 10);
@@ -189,28 +192,27 @@ int main(void)
 
 	  HAL_UART_Transmit(&huart2, &newLine, sizeof(newLine), 10);
 	  HAL_UART_Transmit(&huart2, &zData[0], sizeof(zData), 10);
+
+	  HAL_Delay(2000);
 #endif
 
 #ifdef TEST_CODE_ENABLED
 
-	  // Release motor brakes
-	  MP6543H.x_motorBrake(false);
-	  MP6543H.y_motorBrake(false);
-	  // Start PWM for x motor
-	  TIM1->CCR1 = MP6543H_PWM1_SPEED;
-	  HAL_TIMEx_PWMN_Start(&htim1, TIM_CHANNEL_1);
-	  HAL_Delay(2000);
-	  HAL_TIMEx_PWMN_Stop(&htim1, TIM_CHANNEL_1);
-	  // Stop x motor PWM, Start PWM for y motor
-	  TIM1->CCR1 = MP6543H_PWM1_SPEED++;
-	  HAL_TIMEx_PWMN_Start(&htim1, TIM_CHANNEL_2);
-	  HAL_Delay(2000);
-	  HAL_TIMEx_PWMN_Stop(&htim1, TIM_CHANNEL_2);
-	  // Stop y motor PWM, brake x and y motors
-	  MP6543H.x_motorBrake(true);
-	  MP6543H.y_motorBrake(true);
-	  HAL_Delay(2000);
 
+	  // Start PWM for x motor
+	  MP6543H.x_motorBrake(false);
+	  MP6543H.setMotorPwm(MP6543H_PWM1_SPEED++);
+	  MP6543H.x_startMotorPwmDuration(MOTOR_CONTROL_DURATION);
+	  MP6543H.x_motorBrake(true);
+
+	  // Stop x motor PWM, Start PWM for y motor
+	  MP6543H.y_motorBrake(false);
+	  MP6543H.setMotorPwm(MP6543H_PWM1_SPEED++);
+	  MP6543H.y_startMotorPwmDuration(MOTOR_CONTROL_DURATION);
+	  MP6543H.y_motorBrake(true);
+	  // Stop y motor PWM, brake y motor
+
+	  HAL_Delay(2000);
 #endif
 
     /* USER CODE END WHILE */
@@ -225,7 +227,7 @@ int main(void)
 // Just a method to clear up main.cpp code
 HAL_StatusTypeDef UART_Send_16bit(UART_HandleTypeDef * uart, uint16_t data)
 {
-	uint8_t packet[2] = {data & 0x00FF, data >> 8};
+	uint8_t packet[2] = {(uint8_t)(data & 0x00FF), (uint8_t)(data >> 8)};
 	return HAL_UART_Transmit(uart, &packet[0], sizeof(packet), 10);
 }
 

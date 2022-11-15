@@ -1,11 +1,8 @@
-../MC3479/Src/MC3479.cpp:14:6:bool MC3479Class::setSerialI2C(I2C_TypeDef*, uint8_t)	24	static
-../MC3479/Src/MC3479.cpp:24:6:bool MC3479Class::setSerialSPI(SPI_HandleTypeDef*, GPIO_TypeDef*, uint16_t)	24	static
-../MC3479/Src/MC3479.cpp:33:6:bool MC3479Class::SPI_readRegister(uint8_t, uint8_t*)	32	static
-../MC3479/Src/MC3479.cpp:47:9:uint8_t MC3479Class::SPI_writeRegister(uint8_t, uint8_t)	24	static
-../MC3479/Src/MC3479.cpp:64:6:bool MC3479Class::burstSPI_readRegister(uint8_t, uint8_t*, uint8_t)	32	static
-../MC3479/Src/MC3479.cpp:83:6:bool MC3479Class::burstSPI_writeRegister(uint8_t, uint8_t, uint8_t)	16	static
-../MC3479/Src/MC3479.cpp:92:9:uint8_t MC3479Class::I2C_readRegister(uint8_t, uint8_t*)	24	static
-../MC3479/Src/MC3479.cpp:99:9:uint8_t MC3479Class::I2C_writeRegister(uint8_t, uint8_t)	16	static
+../MC3479/Src/MC3479.cpp:16:6:bool MC3479Class::setSerialSPI(SPI_HandleTypeDef*, GPIO_TypeDef*, uint16_t)	24	static
+../MC3479/Src/MC3479.cpp:25:6:bool MC3479Class::SPI_readRegister(uint8_t, uint8_t*)	32	static
+../MC3479/Src/MC3479.cpp:39:9:uint8_t MC3479Class::SPI_writeRegister(uint8_t, uint8_t)	24	static
+../MC3479/Src/MC3479.cpp:56:6:bool MC3479Class::burstSPI_readRegister(uint8_t, uint8_t*, uint8_t)	32	static
+../MC3479/Src/MC3479.cpp:75:6:bool MC3479Class::burstSPI_writeRegister(uint8_t, uint8_t, uint8_t)	16	static
 ../MC3479/Src/MC3479.cpp:106:6:void MC3479Class::configAccelerometer()	24	static
 ../MC3479/Src/MC3479.cpp:326:6:bool MC3479Class::setSampleRate(uint8_t)	24	static
 ../MC3479/Src/MC3479.cpp:333:6:bool MC3479Class::getXYZ(uint8_t*, uint8_t*, uint8_t*)	32	static

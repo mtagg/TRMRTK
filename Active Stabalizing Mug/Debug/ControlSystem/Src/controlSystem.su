@@ -1,2 +1,5 @@
 ../ControlSystem/Src/controlSystem.cpp:12:9:int16_t ControlClass::lookupAngle(int16_t, int16_t)	40	static
 ../ControlSystem/Src/controlSystem.cpp:46:9:int16_t ControlClass::normalizeTheta(uint8_t, uint8_t, uint8_t, uint8_t)	24	static
+../ControlSystem/Src/controlSystem.cpp:54:6:bool ControlClass::initControlSystem(int16_t, int16_t, int8_t, int8_t)	24	static
+../ControlSystem/Src/controlSystem.cpp:63:6:bool ControlClass::x_needCorrection(int16_t)	24	static
+../ControlSystem/Src/controlSystem.cpp:76:6:bool ControlClass::y_needCorrection(int16_t)	24	static

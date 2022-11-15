@@ -10,15 +10,7 @@
 
 MC3479Class MC3479;
 
-// Set the MC3479's I2C object and initialize the device I
-bool MC3479Class::setSerialI2C(I2C_TypeDef * i2c, uint8_t devId)
-{
-	this->_I2C1 = i2c;
-	this->I2C_DEVICE_ID = devId;
-	this->I2C_writeId = (I2C_DEVICE_ID << 1) | 0x00;
-	this->I2C_readId = (I2C_DEVICE_ID << 1) | 0x01;
-	return 1; // Return Success
-}
+
 
 // Set the MC3479's SPI object
 bool MC3479Class::setSerialSPI(SPI_HandleTypeDef * spi,GPIO_TypeDef * csn_GPIO, uint16_t csn_PIN )
@@ -83,24 +75,32 @@ bool MC3479Class::burstSPI_readRegister(uint8_t reg, uint8_t* data, uint8_t reg_
 bool MC3479Class::burstSPI_writeRegister(uint8_t reg, uint8_t data, uint8_t reg_count)
 {
 	// TODO: Decide if this is useful.
-	// Can only see us needing this function in the casae where we need to set multiple registers on the fly.
+	// Can only see us needing this function in the case where we need to set multiple registers on the fly.
 	// TODO: Possibly could use this for configuration if we run out of flash???
 	return 1;
 }
-
+#ifndef _SPI_COM_ENABLED
+// Set the MC3479's I2C object and initialize the device I
+bool MC3479Class::setSerialI2C(I2C_TypeDef * i2c, uint8_t devId)
+{
+	this->_I2C1 = i2c;
+	this->I2C_DEVICE_ID = devId;
+	this->I2C_writeId = (I2C_DEVICE_ID << 1) | 0x00;
+	this->I2C_readId = (I2C_DEVICE_ID << 1) | 0x01;
+	return 1; // Return Success
+}
 // Read from a register using I2C
 uint8_t MC3479Class::I2C_readRegister(uint8_t reg, uint8_t* data)
 {
 	//HAL_I2C_Master_Transmit(_I2C1, I2C_DEVICE_ID, data, REG_BYTES_LEN, 10)
 	return 1;
 }
-
 // Write to a register using I2C
 uint8_t MC3479Class::I2C_writeRegister(uint8_t reg, uint8_t data)
 {
 	return 1;
 }
-
+#endif
 
 // Perform the initial MC3479 hard-coded configuration
 void MC3479Class::configAccelerometer(){

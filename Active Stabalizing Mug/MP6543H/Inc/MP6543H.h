@@ -18,12 +18,7 @@
 #include "stm32f1xx_hal.h"
 //#include "main.h"
 
-//#define X_MOTOR_PWM
-//#define Y_MOTOR_PWM
-//#define X_MOTOR_DIR
-//#define Y_MOTOR_DIR
-//#define X_MOTOR_BRAKE MP6543B_nBRAKE_X_Pin
-//#define Y_MOTOR_BRAKE
+#define MOTOR_CONTROL_DURATION 1 // in ms
 
 
 
@@ -64,33 +59,38 @@ public:
 /*
  * MP6543HGL-B-Z Function-Headers
  */
+
+
+	bool setMotorPwm(uint8_t pwm);
+
+
 	//x-axis motor functions:
 	bool x_configMotorController(uint16_t xPwmChannel, TIM_HandleTypeDef * pwmTimer,
 									GPIO_TypeDef* xDir, uint16_t xDirPin,
-										GPIO_TypeDef* xDirBrake, uint16_t xBrakePin,
+										GPIO_TypeDef* xBrake, uint16_t xBrakePin,
 											GPIO_TypeDef* xSleep, uint16_t xSleepPin,
 												GPIO_TypeDef* xFault, uint16_t xFaultPin);
 
-	bool x_motorSleep();
-	bool x_motorWake();
-	bool x_setDir(bool forward_polarity);
-	bool x_setPwm(uint8_t pwm);
+	inline bool x_motorSleep();
+	inline bool x_motorWake();
+	bool x_setMotorDir(bool forward_polarity);
 	bool x_motorBrake(bool want_brake);
-	bool x_motorFault();
+	bool x_startMotorPwmDuration(int duration);
+	inline bool x_motorFault();
 
 	//y-axis motor functions:
 	bool y_configMotorController(uint16_t yPwmChannel, TIM_HandleTypeDef * pwmTimer,
 									GPIO_TypeDef* yDir, uint16_t yDirPin,
-										GPIO_TypeDef* yDirBrake, uint16_t yBrakePin,
+										GPIO_TypeDef* yBrake, uint16_t yBrakePin,
 											GPIO_TypeDef* ySleep, uint16_t ySleepPin,
 												GPIO_TypeDef* yFault, uint16_t yFaultPin);
 
-	bool y_motorSleep();
-	bool y_motorWake();
-	bool y_setDir(bool forward_polarity);
-	bool y_setPwm(uint8_t pwm);
+	inline bool y_motorSleep();
+	inline	bool y_motorWake();
+	bool y_setMotorDir(bool forward_polarity);
 	bool y_motorBrake(bool want_brake);
-	bool y_motorFault();
+	bool y_startMotorPwmDuration(int duration);
+	inline bool y_motorFault();
 
 
 };

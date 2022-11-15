@@ -48,8 +48,55 @@ int16_t ControlClass::normalizeTheta(uint8_t data0, uint8_t data1, uint8_t z0, u
 	int16_t z_acc = (z1 << 8) | z0;
 	int16_t axis_acc = (data1 << 8) | data0;
 	return lookupAngle(axis_acc,z_acc);
+}
 
 
+bool ControlClass::initControlSystem(int16_t x_nominal, int16_t y_nominal, int8_t x_allowable, int8_t y_allowable)
+{
+	this->x_nominalAngle = x_nominal;
+	this->x_allowableAngle = x_allowable;
+	this->y_nominalAngle = y_nominal;
+	this->y_allowableAngle = y_allowable;
+	return 1;
+}
 
+bool ControlClass::x_needCorrection(int16_t theta)
+{
+	int16_t delta = theta - this->x_nominalAngle;
+	if (delta < 0){
+		delta *= -1;
+	}
+	if (delta > this->x_allowableAngle){
+		return true;
+	}
+	// no correction necessary
+	return false;
 
 }
+bool ControlClass::y_needCorrection(int16_t theta)
+{
+	int16_t delta = theta - this->y_nominalAngle;
+	if (delta < 0){
+		delta *= -1;
+	}
+	if ((theta - this->y_nominalAngle) > this->y_allowableAngle){
+		// correction necessary
+		return 1;
+	}
+	// no correction necessary
+	return 0;
+}
+
+inline uint8_t ControlClass::x_calcPwm(int16_t x_nominal, int16_t x_theta, int16_t y_nominal, int16_t y_theta)
+{
+	// 50% duty cycle for initial testing:
+	// TODO: integrate P/PI/PID control here
+	return (uint8_t)128;
+}
+inline uint8_t ControlClass::y_calcPwm(int16_t x_nominal, int16_t x_theta, int16_t y_nominal, int16_t y_theta)
+{
+	// 50% duty cycle for initial testing:
+	// TODO: integrate P/PI/PID control here
+	return (uint8_t)128;
+}
+

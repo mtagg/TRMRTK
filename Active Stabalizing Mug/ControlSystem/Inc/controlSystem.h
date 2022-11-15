@@ -4,6 +4,9 @@
  *  Created on: Nov 10, 2022
  *      Author: mmmta
  *
+ *      This file contains any logic around the control system, such as PID controls, normalizing and interpretting data.
+ *      Many of the variables and decisions made within the ControlClass class will then be used to interface the MP6543H and MC3479 hardware.
+ *
  */
 #ifndef SRC_CONTROLSYSTEM_H_
 #define SRC_CONTROLSYSTEM_H_
@@ -20,6 +23,10 @@ public:
 /*
  * Class Variables
  */
+	int8_t x_allowableAngle = 15;
+	int8_t y_allowableAngle = 15;
+	int16_t x_nominalAngle = 0;
+	int16_t y_nominalAngle = 0;
 
 	// look-up table for determining theta based on :
 	// arctan(theta) = z_acceleration/x/y_acceleration ratios
@@ -47,16 +54,18 @@ public:
 	// returns signed 16bit theta value from -90 to + 90
 	int16_t lookupAngle(int16_t z_acc, int16_t axis_acc);
 
-	// Wrapper method
+	// Wrapper
 	// Returns theta as the arctan of the ratio between data/z with angles between -90 and +90 degrees
 	// where data is x or y accelerometer data values
 	int16_t normalizeTheta(uint8_t data0, uint8_t data1, uint8_t z0, uint8_t z1);
 
-	bool x_needCorrection();
-	bool y_needCorrection();
+	bool initControlSystem(int16_t x_nominal, int16_t y_nominal, int8_t x_allowable, int8_t y_allowable);
 
-	bool x_setPwm();
-	bool y_setPwm();
+	bool x_needCorrection(int16_t theta);
+	bool y_needCorrection(int16_t theta);
+
+	inline uint8_t x_calcPwm(int16_t x_nominal, int16_t x_theta, int16_t y_nominal, int16_t y_theta);
+	inline uint8_t y_calcPwm(int16_t x_nominal, int16_t x_theta, int16_t y_nominal, int16_t y_theta);
 
 
 };

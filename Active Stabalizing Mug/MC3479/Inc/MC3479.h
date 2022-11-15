@@ -397,8 +397,16 @@ public:
 /*
  * MC3479Class Function-Headers
  */
+
+#ifndef _SPI_COM_ENABLED
 	// Set the MC3479's I2C object and initialize the device I
 	bool setSerialI2C(I2C_TypeDef * i2c, uint8_t devId);
+	// Read from a register using I2C
+	uint8_t I2C_readRegister(uint8_t reg, uint8_t* data);
+	// Write to a register using I2C
+	uint8_t I2C_writeRegister(uint8_t reg, uint8_t data);
+#endif
+
 	// Set the MC3479's SPI object
 	bool setSerialSPI(SPI_HandleTypeDef * spi,GPIO_TypeDef * csn_GPIO, uint16_t csn_PIN );
 	// Read from a register using SPI
@@ -409,10 +417,7 @@ public:
 	bool burstSPI_readRegister(uint8_t reg, uint8_t* data, uint8_t reg_count);
 	// Write to a register using SPI
 	bool burstSPI_writeRegister(uint8_t reg, uint8_t data, uint8_t reg_count);
-	// Read from a register using I2C
-	uint8_t I2C_readRegister(uint8_t reg, uint8_t* data);
-	// Write to a register using I2C
-	uint8_t I2C_writeRegister(uint8_t reg, uint8_t data);
+
 	// Perform the initial MC3479 hard-coded configuration
 	void configAccelerometer();
 	// Set the accelerometer's sample rate from 50-2000Hz
