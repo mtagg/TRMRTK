@@ -18,8 +18,14 @@
 #include "stm32f1xx_hal.h"
 //#include "main.h"
 
-#define MOTOR_CONTROL_DURATION 1 // in ms
+#define MOTOR_CONTROL_DURATION 5 // in ms
 
+/* CW and CCW are defined as the direction of the mug when facing the axis' motors from the outside of the mug, looking in.
+ * so if the mug were to turn CCW on the handle's x-axis, this indicates a positive theta value.
+ * To correct for this, we would set motor direction to CW to subtract from theta.
+ * */
+#define CLOCKWISE_DIR 1
+#define COUNTER_CLOCKWISE_DIR !CLOCKWISE_DIR
 
 
 class MP6543HClass
@@ -29,7 +35,6 @@ public:
  * Public Variables
  */
 //TODO: Finalize member variables
-
 
 
 	GPIO_TypeDef * _x_DIR_GPIO;
@@ -71,12 +76,12 @@ public:
 											GPIO_TypeDef* xSleep, uint16_t xSleepPin,
 												GPIO_TypeDef* xFault, uint16_t xFaultPin);
 
-	inline bool x_motorSleep();
-	inline bool x_motorWake();
+	bool x_motorSleep();
+	bool x_motorWake();
 	bool x_setMotorDir(bool forward_polarity);
 	bool x_motorBrake(bool want_brake);
-	bool x_startMotorPwmDuration(int duration);
-	inline bool x_motorFault();
+	bool x_startMotorPwmDuration(uint32_t duration);
+	bool x_motorFault();
 
 	//y-axis motor functions:
 	bool y_configMotorController(uint16_t yPwmChannel, TIM_HandleTypeDef * pwmTimer,
@@ -85,12 +90,12 @@ public:
 											GPIO_TypeDef* ySleep, uint16_t ySleepPin,
 												GPIO_TypeDef* yFault, uint16_t yFaultPin);
 
-	inline bool y_motorSleep();
-	inline	bool y_motorWake();
+	bool y_motorSleep();
+	bool y_motorWake();
 	bool y_setMotorDir(bool forward_polarity);
 	bool y_motorBrake(bool want_brake);
-	bool y_startMotorPwmDuration(int duration);
-	inline bool y_motorFault();
+	bool y_startMotorPwmDuration(uint32_t duration);
+	bool y_motorFault();
 
 
 };

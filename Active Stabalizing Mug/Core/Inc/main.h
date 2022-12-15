@@ -59,18 +59,6 @@ void Error_Handler(void);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
-#define LEDR_Out_Pin GPIO_PIN_13
-#define LEDR_Out_GPIO_Port GPIOC
-#define LEDG_Out_Pin GPIO_PIN_14
-#define LEDG_Out_GPIO_Port GPIOC
-#define LEDB_Out_Pin GPIO_PIN_15
-#define LEDB_Out_GPIO_Port GPIOC
-#define LED_Power_OSC_IN_Pin GPIO_PIN_0
-#define LED_Power_OSC_IN_GPIO_Port GPIOD
-#define LED_Button_In_OSC_OUT_Pin GPIO_PIN_1
-#define LED_Button_In_OSC_OUT_GPIO_Port GPIOD
-#define ADC1_IN1_BATT_Pin GPIO_PIN_0
-#define ADC1_IN1_BATT_GPIO_Port GPIOA
 #define nTILT_BUTTON_Pin GPIO_PIN_1
 #define nTILT_BUTTON_GPIO_Port GPIOA
 #define MP6543H_SOA_X_Pin GPIO_PIN_4

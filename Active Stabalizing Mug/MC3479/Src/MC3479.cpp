@@ -26,10 +26,10 @@ bool MC3479Class::SPI_readRegister(uint8_t reg,  uint8_t* data)
 {
 
 	uint8_t spiBytes[2];
-	spiBytes[0] = SPIread_REG && reg;
+	spiBytes[0] = SPIread_REG | reg;
 	spiBytes[1] = SPIread_BYTE2;
 	HAL_GPIO_WritePin(this->_CSN_GPIO, this->_CSN_PIN, GPIO_PIN_RESET);
-	HAL_SPI_Transmit(this->_SPI1, spiBytes, sizeof(spiBytes), 10);
+	HAL_SPI_Transmit(this->_SPI1, &spiBytes[0], sizeof(spiBytes), 10);
 	HAL_SPI_Receive(this->_SPI1, data, REG_BYTES_LEN, 10);
 	HAL_GPIO_WritePin(this->_CSN_GPIO, this->_CSN_PIN, GPIO_PIN_SET);
 	return 1;
@@ -40,10 +40,10 @@ uint8_t MC3479Class::SPI_writeRegister(uint8_t reg, uint8_t data)
 {
 	// Write data to reg:
 	uint8_t spiBytes[2];
-	spiBytes[0] = SPIwrite_REG && reg;
+	spiBytes[0] = SPIwrite_REG | reg;
 	spiBytes[1] = data;
 	HAL_GPIO_WritePin(this->_CSN_GPIO, this->_CSN_PIN, GPIO_PIN_RESET);
-	HAL_SPI_Transmit(this->_SPI1, spiBytes, sizeof(spiBytes), 10);
+	HAL_SPI_Transmit(this->_SPI1, &spiBytes[0], sizeof(spiBytes), 10);
 	HAL_GPIO_WritePin(this->_CSN_GPIO, this->_CSN_PIN, GPIO_PIN_SET);
 
 	// Read back the register and return the bytes:
@@ -56,7 +56,7 @@ uint8_t MC3479Class::SPI_writeRegister(uint8_t reg, uint8_t data)
 bool MC3479Class::burstSPI_readRegister(uint8_t reg, uint8_t* data, uint8_t reg_count)
 {
 	uint8_t spiBytes[2];
-	spiBytes[0] = SPIread_REG && reg;
+	spiBytes[0] = SPIread_REG | reg;
 	spiBytes[1] = SPIread_BYTE2;
 	HAL_GPIO_WritePin(this->_CSN_GPIO, this->_CSN_PIN, GPIO_PIN_RESET);
 	HAL_SPI_Transmit(this->_SPI1, spiBytes, sizeof(spiBytes), 10);
@@ -130,50 +130,50 @@ void MC3479Class::configAccelerometer(){
 		data = 0xFF & 0x00; // No resolution range change, no LPF
 		MC3479Class::SPI_writeRegister(MC3479_RANGE, data);
 
-		// Register 0x21 (X-offset lSB)
-		MC3479Class::SPI_readRegister(MC3479_XOFFL, &data);
-		data = data & 0xFF; //no offset
-		MC3479Class::SPI_writeRegister(MC3479_XOFFL, data);
-
-		// Register 0x22 (X-offset MSB)
-		MC3479Class::SPI_readRegister(MC3479_XOFFH, &data);
-		data = data & 0xFF; //no offset
-		MC3479Class::SPI_writeRegister(MC3479_XOFFH, data);
-
-		// Register 0x23 (Y-offset LSB)
-		MC3479Class::SPI_readRegister(MC3479_YOFFL, &data);
-		data = data & 0xFF; //no offset
-		MC3479Class::SPI_writeRegister(MC3479_YOFFL, data);
-
-		// Register 0x24 (Y-offset MSB)
-		MC3479Class::SPI_readRegister(MC3479_YOFFH, &data);
-		data = data & 0xFF; //no offset
-		MC3479Class::SPI_writeRegister(MC3479_YOFFH, data);
-
-		// Register 0x25 (Z-offset LSB)
-		MC3479Class::SPI_readRegister(MC3479_ZOFFL, &data);
-		data = data & 0xFF; //no offset
-		MC3479Class::SPI_writeRegister(MC3479_ZOFFL, data);
-
-		// Register 0x26 (Z-offset MSB)
-		MC3479Class::SPI_readRegister(MC3479_ZOFFH, &data);
-		data = data & 0xFF; //no offset
-		MC3479Class::SPI_writeRegister(MC3479_ZOFFH, data);
-
-		// Register 0x27 (X Gain)
-		MC3479Class::SPI_readRegister(MC3479_XGAIN, &data);
-		data = data & 0xFF; //no GAIN
-		MC3479Class::SPI_writeRegister(MC3479_XGAIN, data);
-
-		// Register 0x28 (Y Gain)
-		MC3479Class::SPI_readRegister(MC3479_YGAIN, &data);
-		data = data & 0xFF; //no GAIN
-		MC3479Class::SPI_writeRegister(MC3479_YGAIN, data);
-
-		// Register 0x29 (Z Gain)
-		MC3479Class::SPI_readRegister(MC3479_ZGAIN, &data);
-		data = data & 0xFF; //no GAIN
-		MC3479Class::SPI_writeRegister(MC3479_ZGAIN, data);
+//		// Register 0x21 (X-offset lSB)
+//		MC3479Class::SPI_readRegister(MC3479_XOFFL, &data);
+//		data = data & 0xFF; //no offset
+//		MC3479Class::SPI_writeRegister(MC3479_XOFFL, data);
+//
+//		// Register 0x22 (X-offset MSB)
+//		MC3479Class::SPI_readRegister(MC3479_XOFFH, &data);
+//		data = data & 0xFF; //no offset
+//		MC3479Class::SPI_writeRegister(MC3479_XOFFH, data);
+//
+//		// Register 0x23 (Y-offset LSB)
+//		MC3479Class::SPI_readRegister(MC3479_YOFFL, &data);
+//		data = data & 0xFF; //no offset
+//		MC3479Class::SPI_writeRegister(MC3479_YOFFL, data);
+//
+//		// Register 0x24 (Y-offset MSB)
+//		MC3479Class::SPI_readRegister(MC3479_YOFFH, &data);
+//		data = data & 0xFF; //no offset
+//		MC3479Class::SPI_writeRegister(MC3479_YOFFH, data);
+//
+//		// Register 0x25 (Z-offset LSB)
+//		MC3479Class::SPI_readRegister(MC3479_ZOFFL, &data);
+//		data = data & 0xFF; //no offset
+//		MC3479Class::SPI_writeRegister(MC3479_ZOFFL, data);
+//
+//		// Register 0x26 (Z-offset MSB)
+//		MC3479Class::SPI_readRegister(MC3479_ZOFFH, &data);
+//		data = data & 0xFF; //no offset
+//		MC3479Class::SPI_writeRegister(MC3479_ZOFFH, data);
+//
+//		// Register 0x27 (X Gain)
+//		MC3479Class::SPI_readRegister(MC3479_XGAIN, &data);
+//		data = data & 0xFF; //no GAIN
+//		MC3479Class::SPI_writeRegister(MC3479_XGAIN, data);
+//
+//		// Register 0x28 (Y Gain)
+//		MC3479Class::SPI_readRegister(MC3479_YGAIN, &data);
+//		data = data & 0xFF; //no GAIN
+//		MC3479Class::SPI_writeRegister(MC3479_YGAIN, data);
+//
+//		// Register 0x29 (Z Gain)
+//		MC3479Class::SPI_readRegister(MC3479_ZGAIN, &data);
+//		data = data & 0xFF; //no GAIN
+//		MC3479Class::SPI_writeRegister(MC3479_ZGAIN, data);
 
 		// RegisteO 0x2D (FIFO Control)
 		data = 0XFF & FIFO_TH_INT_EN & FIFO_FULL_INT_EN; // FIFO TH/Full IRQ set on INTN2 pin.
@@ -323,11 +323,10 @@ void MC3479Class::configAccelerometer(){
 }
 
 // Set the accelerometer's sample rate from 50-2000Hz
-bool MC3479Class::setSampleRate(uint8_t rate)
+uint8_t MC3479Class::setSampleRate(uint8_t rate)
 {
 		uint8_t data = 0xFF & rate; // sample x,y,z @ 100Hz
-		MC3479Class::SPI_writeRegister(MC3479_SR, data);
-		return 1;
+		return MC3479Class::SPI_writeRegister(MC3479_SR, data);
 }
 
 bool MC3479Class::getXYZ(uint8_t* xData, uint8_t* yData, uint8_t* zData)

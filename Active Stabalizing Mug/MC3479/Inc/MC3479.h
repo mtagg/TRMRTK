@@ -375,8 +375,8 @@
  */
 
 #define _SPI_COM_ENABLED
-#define SPIwrite_REG		0x7F //bit-wise AND this with the reg number for register write
-#define SPIread_REG			0xFF //bit-wise AND this with the reg number for register read
+#define SPIwrite_REG		0x00 //bit-wise OR this with the reg number for register write
+#define SPIread_REG			0x80 //bit-wise OR this with the reg number for register read
 #define SPIread_BYTE2		0x00
 #define REG_BYTES_LEN		1
 
@@ -421,7 +421,7 @@ public:
 	// Perform the initial MC3479 hard-coded configuration
 	void configAccelerometer();
 	// Set the accelerometer's sample rate from 50-2000Hz
-	bool setSampleRate(uint8_t rate);
+	uint8_t setSampleRate(uint8_t rate);
 	bool getXYZ(uint8_t* xData, uint8_t* yData, uint8_t* zData);
 	uint8_t getMotionFlagStatus();
 	uint8_t getMotionIrqStatus();
@@ -434,14 +434,10 @@ public:
 	 * TODO: Additional headers
 	 * get FIFO pointer??
 	 * get FIFO status??
-	 * Sleep Mode enable
-	 * Idle Mode enable
+	 * Sleep Mode enable???
+	 * Idle Mode Enable
 	 * WakeUp
-	 *
-	 *
 	 */
-
-
 
 };
 

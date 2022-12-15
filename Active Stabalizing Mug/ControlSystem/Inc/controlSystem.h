@@ -59,13 +59,13 @@ public:
 	// where data is x or y accelerometer data values
 	int16_t normalizeTheta(uint8_t data0, uint8_t data1, uint8_t z0, uint8_t z1);
 
-	bool initControlSystem(int16_t x_nominal, int16_t y_nominal, int8_t x_allowable, int8_t y_allowable);
+	bool updateControlSystem(int16_t x_nominal, int16_t y_nominal, int8_t x_allowable, int8_t y_allowable);
 
 	bool x_needCorrection(int16_t theta);
 	bool y_needCorrection(int16_t theta);
 
-	inline uint8_t x_calcPwm(int16_t x_nominal, int16_t x_theta, int16_t y_nominal, int16_t y_theta);
-	inline uint8_t y_calcPwm(int16_t x_nominal, int16_t x_theta, int16_t y_nominal, int16_t y_theta);
+	uint8_t x_calcPwm(int16_t x_nominal, int16_t x_theta, int16_t y_nominal, int16_t y_theta);
+	uint8_t y_calcPwm(int16_t x_nominal, int16_t x_theta, int16_t y_nominal, int16_t y_theta);
 
 
 };

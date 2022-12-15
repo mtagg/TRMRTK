@@ -18,7 +18,7 @@ int16_t ControlClass::lookupAngle(int16_t z_acc, int16_t axis_acc)
 		return (axis_acc < 0) ? (int16_t) -90 : (int16_t) 90;
 	}
 
-	double arctan_theta = (double)(axis_acc/z_acc);
+	double arctan_theta = (double)((double)axis_acc/(double)z_acc);
 	int sign;
 
 	//convert ratio to positive for quicker LUT result
@@ -47,11 +47,11 @@ int16_t ControlClass::normalizeTheta(uint8_t data0, uint8_t data1, uint8_t z0, u
 {
 	int16_t z_acc = (z1 << 8) | z0;
 	int16_t axis_acc = (data1 << 8) | data0;
-	return lookupAngle(axis_acc,z_acc);
+	return lookupAngle(z_acc, axis_acc);
 }
 
-
-bool ControlClass::initControlSystem(int16_t x_nominal, int16_t y_nominal, int8_t x_allowable, int8_t y_allowable)
+// TODO: Do we need to have an init method, or keep all variables in main???
+bool ControlClass::updateControlSystem(int16_t x_nominal, int16_t y_nominal, int8_t x_allowable, int8_t y_allowable)
 {
 	this->x_nominalAngle = x_nominal;
 	this->x_allowableAngle = x_allowable;
@@ -87,16 +87,22 @@ bool ControlClass::y_needCorrection(int16_t theta)
 	return 0;
 }
 
-inline uint8_t ControlClass::x_calcPwm(int16_t x_nominal, int16_t x_theta, int16_t y_nominal, int16_t y_theta)
+uint8_t ControlClass::x_calcPwm(int16_t x_nominal, int16_t x_theta, int16_t y_nominal, int16_t y_theta)
 {
-	// 50% duty cycle for initial testing:
-	// TODO: integrate P/PI/PID control here
-	return (uint8_t)128;
+	if (ControlClass::x_needCorrection(x_theta)){
+		// 50% duty cycle for initial testing:
+		// TODO: integrate P/PI/PID control here
+		return (uint8_t)90;
+	}
+	return 0;
 }
-inline uint8_t ControlClass::y_calcPwm(int16_t x_nominal, int16_t x_theta, int16_t y_nominal, int16_t y_theta)
+uint8_t ControlClass::y_calcPwm(int16_t x_nominal, int16_t x_theta, int16_t y_nominal, int16_t y_theta)
 {
-	// 50% duty cycle for initial testing:
-	// TODO: integrate P/PI/PID control here
-	return (uint8_t)128;
+	if (ControlClass::y_needCorrection(y_theta)){
+		// 50% duty cycle for initial testing:
+		// TODO: integrate P/PI/PID control here
+		return (uint8_t)90;
+	}
+	return 0;
 }
 
