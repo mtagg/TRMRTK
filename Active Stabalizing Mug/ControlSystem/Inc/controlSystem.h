@@ -23,8 +23,8 @@ public:
 /*
  * Class Variables
  */
-	int8_t x_allowableAngle = 15;
-	int8_t y_allowableAngle = 15;
+	int8_t x_allowableAngle = 10;
+	int8_t y_allowableAngle = 10;
 	int16_t x_nominalAngle = 0;
 	int16_t y_nominalAngle = 0;
 
@@ -61,8 +61,8 @@ public:
 
 	bool updateControlSystem(int16_t x_nominal, int16_t y_nominal, int8_t x_allowable, int8_t y_allowable);
 
-	bool x_needCorrection(int16_t theta);
-	bool y_needCorrection(int16_t theta);
+	uint8_t x_needCorrection(int16_t theta);
+	uint8_t y_needCorrection(int16_t theta);
 
 	uint8_t x_calcPwm(int16_t x_nominal, int16_t x_theta, int16_t y_nominal, int16_t y_theta);
 	uint8_t y_calcPwm(int16_t x_nominal, int16_t x_theta, int16_t y_nominal, int16_t y_theta);

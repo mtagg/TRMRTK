@@ -153,9 +153,9 @@ int main(void)
   int16_t y_theta = 0;
   int16_t x_nominal = 0;
   int16_t y_nominal = 0;
-  uint8_t xPWM = 0x00;
-  uint8_t yPWM = 0x00;
-  int8_t allowableAngle = 15;
+  uint8_t xPWM = 0;
+  uint8_t yPWM = 0;
+  int8_t allowableAngle = 5;
 
   ControlSystem.updateControlSystem(x_nominal, y_nominal, allowableAngle, allowableAngle);
 
@@ -176,15 +176,18 @@ int main(void)
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
+  HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_1);
   while (1)
   {
 	  // Brake if any motor fault or if tilt button is pressed.
 	  while(HAL_GPIO_ReadPin(nTILT_BUTTON_GPIO_Port, nTILT_BUTTON_Pin) == 0){
+//		  HAL_TIM_PWM_Stop(&htim1, TIM_CHANNEL_1);
 		  MP6543H.x_motorBrake(true);
 		  MP6543H.y_motorBrake(true);
 		  HAL_Delay(1);
 	  }
 	  while(MP6543H.x_motorFault() || MP6543H.y_motorFault()){
+//		  HAL_TIM_PWM_Stop(&htim1, TIM_CHANNEL_1);
 		  MP6543H.x_motorBrake(true);
 		  MP6543H.y_motorBrake(true);
 		  HAL_Delay(1);
@@ -211,17 +214,22 @@ int main(void)
 //	  HAL_UART_Transmit(&huart2, &motionIrqStatus, sizeof(motionIrqStatus), 10);
 //	  MC3479.clearMotionIrqStatus();
 
+
+	  //TEST
 	  // set correct motor directions:
-	  if (x_theta < 0){
+//	  if (x_theta < 0){
+//		  MP6543H.x_setMotorDir(!CLOCKWISE_DIR);
+//	  }else{
+//		  MP6543H.x_setMotorDir(CLOCKWISE_DIR);
+//	  }
+	  if (y_theta < 0){
 		  MP6543H.x_setMotorDir(!CLOCKWISE_DIR);
+//		  MP6543H.y_setMotorDir(!CLOCKWISE_DIR);
 	  }else{
+//		  MP6543H.y_setMotorDir(CLOCKWISE_DIR);
 		  MP6543H.x_setMotorDir(CLOCKWISE_DIR);
 	  }
-	  if (y_theta < 0){
-		  MP6543H.y_setMotorDir(!CLOCKWISE_DIR);
-	  }else{
-		  MP6543H.y_setMotorDir(CLOCKWISE_DIR);
-	  }
+	  // END TEST
 
 #ifdef	 __SIMULINK_EN
 
@@ -239,19 +247,20 @@ int main(void)
 
 	  // Send the Simulink Packet - Least significant Byte first - Byte 0 : Byte 7
 	  // dividing simulink packet size by 4 to only send x_theta
-	  HAL_UART_Transmit(&huart3, &Simulink_Packet[0], sizeof(Simulink_Packet)/4, 10);
-//	  HAL_UART_Transmit(&huart3, &Simulink_Packet[4], sizeof(Simulink_Packet)/4, 10);
+//	  HAL_UART_Transmit(&huart3, &Simulink_Packet[0], sizeof(Simulink_Packet)/4, 10);
+	  HAL_UART_Transmit(&huart3, &Simulink_Packet[4], sizeof(Simulink_Packet)/4, 10);
 	  // Check for UART Rx Buffer:
 	  // Loop until we recieve xAxis PWM value in SimulinkPwm[0]:
 	  while (HAL_UART_Receive(&huart3, &SimulinkPwm[0], sizeof(SimulinkPwm[0]), 0) == HAL_TIMEOUT){
 		  HAL_Delay(1);
 	  }
 	  xPWM = SimulinkPwm[0];
-	  //yPWM = SimulinkPwm[1];
-	  if (!MP6543H.x_motorFault()){
-	  	MP6543H.setMotorPwm(xPWM);
-	  	MP6543H.x_startMotorPwmDuration(MOTOR_CONTROL_DURATION);
-	  }
+//	  //yPWM = SimulinkPwm[1];
+	  MP6543H.setMotorPwm(xPWM);
+//	  if (!MP6543H.x_motorFault()){
+//
+//	  	MP6543H.x_startMotorPwmDuration(MOTOR_CONTROL_DURATION);
+//	  }
 	  //if (!MP6543H.y_motorFault()){
 		//  MP6543H.setMotorPwm(yPWM);
 		//  MP6543H.y_startMotorPwmDuration(MOTOR_CONTROL_DURATION);
@@ -260,16 +269,19 @@ int main(void)
 
 #else
 
-	uint8_t xAng [] = {(uint8_t)x_theta, (uint8_t)(x_theta >> 8)};
-	HAL_UART_Transmit(&huart3, &xAng[0], sizeof(xAng), 10);
-	xPWM = ControlSystem.x_calcPwm(x_nominal, x_theta, y_nominal, y_theta);
-	if (!MP6543H.x_motorFault()){
-		MP6543H.setMotorPwm(xPWM);
-		MP6543H.x_startMotorPwmDuration(MOTOR_CONTROL_DURATION);
-	}
+//	uint8_t xAng [] = {(uint8_t)x_theta, (uint8_t)(x_theta >> 8)};
+//	HAL_UART_Transmit(&huart3, &xAng[0], sizeof(xAng), 1);
+//	xPWM = ControlSystem.x_calcPwm(x_nominal, x_theta, y_nominal, y_theta);
+//	MP6543H.setMotorPwm(xPWM);
+//	if (!MP6543H.x_motorFault()){
+//		MP6543H.x_motorBrake(false);
+////		MP6543H.x_startMotorPwmDuration(MOTOR_CONTROL_DURATION);
+//	}
 
-
-//	yPWM = ControlSystem.y_calcPwm(x_nominal, x_theta, y_nominal, y_theta);
+//	uint8_t yAng [] = {(uint8_t)y_theta, (uint8_t)(y_theta >> 8)};
+//	HAL_UART_Transmit(&huart3, &yAng[0], sizeof(yAng), 1);
+	yPWM = ControlSystem.y_calcPwm(x_nominal, x_theta, y_nominal, y_theta);
+	MP6543H.setMotorPwm(yPWM);
 //	if (!MP6543H.y_motorFault()){
 //		MP6543H.setMotorPwm(yPWM);
 //		MP6543H.y_startMotorPwmDuration(MOTOR_CONTROL_DURATION);
@@ -385,9 +397,8 @@ void SystemClock_Config(void)
   /** Initializes the RCC Oscillators according to the specified parameters
   * in the RCC_OscInitTypeDef structure.
   */
-  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI;
-  RCC_OscInitStruct.HSIState = RCC_HSI_ON;
-  RCC_OscInitStruct.HSICalibrationValue = RCC_HSICALIBRATION_DEFAULT;
+  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSE;
+  RCC_OscInitStruct.HSEState = RCC_HSE_ON;
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_NONE;
   if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
   {
@@ -398,7 +409,7 @@ void SystemClock_Config(void)
   */
   RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
                               |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2;
-  RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_HSI;
+  RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_HSE;
   RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
   RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV1;
   RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;
@@ -485,7 +496,7 @@ static void MX_SPI1_Init(void)
   hspi1.Init.CLKPolarity = SPI_POLARITY_LOW;
   hspi1.Init.CLKPhase = SPI_PHASE_1EDGE;
   hspi1.Init.NSS = SPI_NSS_SOFT;
-  hspi1.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_16;
+  hspi1.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_2;
   hspi1.Init.FirstBit = SPI_FIRSTBIT_MSB;
   hspi1.Init.TIMode = SPI_TIMODE_DISABLE;
   hspi1.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
@@ -681,7 +692,7 @@ static void MX_GPIO_Init(void)
   /*Configure GPIO pins : MP6543H_nFAULT_Y_Pin MP6543H_nFAULT_X_Pin MC3479_INTN1_Pin MC3479_INTN2_Pin */
   GPIO_InitStruct.Pin = MP6543H_nFAULT_Y_Pin|MP6543H_nFAULT_X_Pin|MC3479_INTN1_Pin|MC3479_INTN2_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Pull = GPIO_PULLUP;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
   /*Configure GPIO pins : MP6543H_DIR_X_Pin MP6543H_nSLEEP_X_Pin MP6543H_nBRAKE_X_Pin */

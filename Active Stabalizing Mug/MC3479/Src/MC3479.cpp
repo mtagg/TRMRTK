@@ -119,7 +119,7 @@ void MC3479Class::configAccelerometer(){
 		MC3479Class::SPI_writeRegister(MC3479_MODE, data);
 
 		// Register 0x08 (Sample  Rate)
-		data = 0xFF & RATE1_100Hz; // sample x,y,z @ 100Hz
+		data = 0xFF & RATE7_2000Hz; // sample x,y,z @ 100Hz
 		MC3479Class::SPI_writeRegister(MC3479_SR, data);
 
 		// Register 0x09 (Motion Control)

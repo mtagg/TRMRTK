@@ -60,28 +60,28 @@ bool ControlClass::updateControlSystem(int16_t x_nominal, int16_t y_nominal, int
 	return 1;
 }
 
-bool ControlClass::x_needCorrection(int16_t theta)
+uint8_t ControlClass::x_needCorrection(int16_t theta)
 {
 	int16_t delta = theta - this->x_nominalAngle;
 	if (delta < 0){
 		delta *= -1;
 	}
 	if (delta > this->x_allowableAngle){
-		return true;
+		return delta;
 	}
 	// no correction necessary
 	return false;
 
 }
-bool ControlClass::y_needCorrection(int16_t theta)
+uint8_t ControlClass::y_needCorrection(int16_t theta)
 {
 	int16_t delta = theta - this->y_nominalAngle;
 	if (delta < 0){
 		delta *= -1;
 	}
-	if ((theta - this->y_nominalAngle) > this->y_allowableAngle){
+	if (delta > this->y_allowableAngle){
 		// correction necessary
-		return 1;
+		return delta;
 	}
 	// no correction necessary
 	return 0;
@@ -89,19 +89,23 @@ bool ControlClass::y_needCorrection(int16_t theta)
 
 uint8_t ControlClass::x_calcPwm(int16_t x_nominal, int16_t x_theta, int16_t y_nominal, int16_t y_theta)
 {
-	if (ControlClass::x_needCorrection(x_theta)){
-		// 50% duty cycle for initial testing:
-		// TODO: integrate P/PI/PID control here
-		return (uint8_t)90;
+	uint8_t delta = ControlClass::x_needCorrection(x_theta);
+	if (delta > 45){
+		return (uint8_t)100;
+	}
+	if (delta){
+		return (uint8_t)(30 + 70*(delta/45));
 	}
 	return 0;
 }
 uint8_t ControlClass::y_calcPwm(int16_t x_nominal, int16_t x_theta, int16_t y_nominal, int16_t y_theta)
 {
-	if (ControlClass::y_needCorrection(y_theta)){
-		// 50% duty cycle for initial testing:
-		// TODO: integrate P/PI/PID control here
-		return (uint8_t)90;
+	uint8_t delta = ControlClass::y_needCorrection(y_theta);
+	if (delta > 45){
+		return (uint8_t)100;
+	}
+	if (delta){
+		return (uint8_t)(30 + 70*(delta/45));
 	}
 	return 0;
 }
