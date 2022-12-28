@@ -44,6 +44,7 @@
 //#define __UART_TEST_EN
 #define __NORMAL_MODE_EN
 #define __SIMULINK_EN
+//#define __OCP_MEASUREMENT_EN
 
 /* USER CODE END PD */
 
@@ -190,7 +191,12 @@ int main(void)
 //		  HAL_TIM_PWM_Stop(&htim1, TIM_CHANNEL_1);
 		  MP6543H.x_motorBrake(true);
 		  MP6543H.y_motorBrake(true);
-		  HAL_Delay(1);
+//		  HAL_Delay(1);
+#ifdef __OCP_MEASUREMENT_EN
+		  //This should allow us to see how long (approximately) we stay in the nFault loop
+		  uint8_t fault_current [2] = {0xFF, 0xFF};
+		  HAL_UART_Transmit(&huart3, &fault_current[0], sizeof(fault_current), HAL_MAX_DELAY);
+#endif
 	  }
 	  MP6543H.x_motorBrake(false);
 	  MP6543H.y_motorBrake(false);
@@ -208,6 +214,10 @@ int main(void)
 
 	  x_theta = ControlSystem.normalizeTheta(xData[0], xData[1], zData[0], zData[1]);
 	  y_theta = ControlSystem.normalizeTheta(yData[0], yData[1], zData[0], zData[1]);
+//	  if ((y_theta < allowableAngle) && (y_theta > -allowableAngle)){
+//		  MP6543H.setMotorPwm(0);
+//		  continue;
+//	  }
 //	  motionFlagStatus = MC3479.getMotionFlagStatus();
 //	  HAL_UART_Transmit(&huart2, &motionFlagStatus, sizeof(motionFlagStatus), 10);
 //	  motionIrqStatus = MC3479.getMotionIrqStatus();
@@ -222,11 +232,13 @@ int main(void)
 //	  }else{
 //		  MP6543H.x_setMotorDir(CLOCKWISE_DIR);
 //	  }
+
 	  if (y_theta < 0){
 		  MP6543H.x_setMotorDir(!CLOCKWISE_DIR);
 //		  MP6543H.y_setMotorDir(!CLOCKWISE_DIR);
-	  }else{
-//		  MP6543H.y_setMotorDir(CLOCKWISE_DIR);
+	  }
+	  if (y_theta > 0){
+//  	  MP6543H.y_setMotorDir(CLOCKWISE_DIR);
 		  MP6543H.x_setMotorDir(CLOCKWISE_DIR);
 	  }
 	  // END TEST
@@ -249,22 +261,29 @@ int main(void)
 	  // dividing simulink packet size by 4 to only send x_theta
 //	  HAL_UART_Transmit(&huart3, &Simulink_Packet[0], sizeof(Simulink_Packet)/4, 10);
 	  HAL_UART_Transmit(&huart3, &Simulink_Packet[4], sizeof(Simulink_Packet)/4, 10);
-	  // Check for UART Rx Buffer:
-	  // Loop until we recieve xAxis PWM value in SimulinkPwm[0]:
-	  while (HAL_UART_Receive(&huart3, &SimulinkPwm[0], sizeof(SimulinkPwm[0]), 0) == HAL_TIMEOUT){
-		  HAL_Delay(1);
-	  }
-	  xPWM = SimulinkPwm[0];
-//	  //yPWM = SimulinkPwm[1];
-	  MP6543H.setMotorPwm(xPWM);
-//	  if (!MP6543H.x_motorFault()){
-//
-//	  	MP6543H.x_startMotorPwmDuration(MOTOR_CONTROL_DURATION);
+
+
+// Check for UART Rx Buffer:
+// Loop until we recieve xAxis PWM value in SimulinkPwm[0]:
+//	  while (HAL_UART_Receive(&huart3, &SimulinkPwm[0], sizeof(SimulinkPwm[0]), 0) == HAL_TIMEOUT){
+//		  HAL_Delay(1);
 //	  }
-	  //if (!MP6543H.y_motorFault()){
-		//  MP6543H.setMotorPwm(yPWM);
-		//  MP6543H.y_startMotorPwmDuration(MOTOR_CONTROL_DURATION);
-	  //}
+	  HAL_UART_Receive(&huart3, &SimulinkPwm[0], sizeof(SimulinkPwm[0]), 1);
+
+// Update X-axis PWM control:
+		  xPWM = SimulinkPwm[0];
+
+// TEMPORARY IN-CODE P-CONTROL (ANISH)
+	  	  xPWM = (y_theta < 0) ? (int16_t)(-y_theta/2) : (int16_t)(y_theta/2); 	// Set xPWM to 50% Theta
+	  	  MP6543H.x_motorBrake(true);											// Stop driving motor temporarily
+	  	  HAL_TIM_PWM_Stop(&htim1, TIM_CHANNEL_1); 								// Stop PWM output temporarily to update
+	  	  TIM1->CCR1 = xPWM;													// Update duty-cycle register with new duty%
+	  	  HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_1);								// Restart PWM output
+	  	  MP6543H.x_motorBrake(false);											// Release the x motor again
+
+// TODO: Update Y-axis PWM control:
+
+
 
 
 #else
@@ -287,9 +306,41 @@ int main(void)
 //		MP6543H.y_startMotorPwmDuration(MOTOR_CONTROL_DURATION);
 //	}
 
+
 #endif //__SIMULINK_EN//
 
 #endif //__NORMAL_MODE_EN//
+
+#ifdef __OCP_MEASUREMENT_EN
+
+	MP6543H.setMotorPwm(100);
+//	MP6543H.x_motorBrake(true);
+// Read ADC Channel 4:s
+	HAL_ADC_Start(&hadc2);
+	HAL_ADC_PollForConversion(&hadc2, HAL_MAX_DELAY);
+	uint16_t adc_current = HAL_ADC_GetValue(&hadc2);
+	uint8_t p4[2] = {(uint8_t)(adc_current & 0x00FF), (uint8_t)(adc_current >> 8)};
+
+// Read ADC Channel 5:
+	HAL_ADC_Start(&hadc2);
+	HAL_ADC_PollForConversion(&hadc2, HAL_MAX_DELAY);
+	adc_current = HAL_ADC_GetValue(&hadc2);
+	uint8_t p5[2] = {(uint8_t)(adc_current & 0x00FF), (uint8_t)(adc_current >> 8)};
+
+// Read ADC Channel 6:
+	HAL_ADC_Start(&hadc2);
+	HAL_ADC_PollForConversion(&hadc2, HAL_MAX_DELAY);
+	adc_current = HAL_ADC_GetValue(&hadc2);
+	HAL_ADC_Stop(&hadc2);
+	uint8_t p6[2] = {(uint8_t)(adc_current & 0x00FF), (uint8_t)(adc_current >> 8)};
+
+// Transmit ADC 4,5,6 data:
+	HAL_UART_Transmit(&huart3, &p4[0], sizeof(p4), HAL_MAX_DELAY);
+	HAL_UART_Transmit(&huart3, &p5[0], sizeof(p5), HAL_MAX_DELAY);
+	HAL_UART_Transmit(&huart3, &p6[0], sizeof(p6), HAL_MAX_DELAY);
+//	HAL_Delay(4000);
+
+#endif //__OCP_MEASUREMENT_EN//
 
 #ifdef __DEBUG_EN
 
@@ -397,8 +448,9 @@ void SystemClock_Config(void)
   /** Initializes the RCC Oscillators according to the specified parameters
   * in the RCC_OscInitTypeDef structure.
   */
-  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSE;
-  RCC_OscInitStruct.HSEState = RCC_HSE_ON;
+  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI;
+  RCC_OscInitStruct.HSIState = RCC_HSI_ON;
+  RCC_OscInitStruct.HSICalibrationValue = RCC_HSICALIBRATION_DEFAULT;
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_NONE;
   if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
   {
@@ -409,7 +461,7 @@ void SystemClock_Config(void)
   */
   RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
                               |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2;
-  RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_HSE;
+  RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_HSI;
   RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
   RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV1;
   RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;
@@ -447,12 +499,13 @@ static void MX_ADC2_Init(void)
   /** Common config
   */
   hadc2.Instance = ADC2;
-  hadc2.Init.ScanConvMode = ADC_SCAN_DISABLE;
+  hadc2.Init.ScanConvMode = ADC_SCAN_ENABLE;
   hadc2.Init.ContinuousConvMode = DISABLE;
-  hadc2.Init.DiscontinuousConvMode = DISABLE;
+  hadc2.Init.DiscontinuousConvMode = ENABLE;
+  hadc2.Init.NbrOfDiscConversion = 3;
   hadc2.Init.ExternalTrigConv = ADC_SOFTWARE_START;
   hadc2.Init.DataAlign = ADC_DATAALIGN_RIGHT;
-  hadc2.Init.NbrOfConversion = 1;
+  hadc2.Init.NbrOfConversion = 3;
   if (HAL_ADC_Init(&hadc2) != HAL_OK)
   {
     Error_Handler();
@@ -460,9 +513,27 @@ static void MX_ADC2_Init(void)
 
   /** Configure Regular Channel
   */
-  sConfig.Channel = ADC_CHANNEL_7;
+  sConfig.Channel = ADC_CHANNEL_4;
   sConfig.Rank = ADC_REGULAR_RANK_1;
   sConfig.SamplingTime = ADC_SAMPLETIME_1CYCLE_5;
+  if (HAL_ADC_ConfigChannel(&hadc2, &sConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+  /** Configure Regular Channel
+  */
+  sConfig.Channel = ADC_CHANNEL_5;
+  sConfig.Rank = ADC_REGULAR_RANK_2;
+  if (HAL_ADC_ConfigChannel(&hadc2, &sConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+  /** Configure Regular Channel
+  */
+  sConfig.Channel = ADC_CHANNEL_6;
+  sConfig.Rank = ADC_REGULAR_RANK_3;
   if (HAL_ADC_ConfigChannel(&hadc2, &sConfig) != HAL_OK)
   {
     Error_Handler();

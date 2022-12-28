@@ -94,7 +94,7 @@ uint8_t ControlClass::x_calcPwm(int16_t x_nominal, int16_t x_theta, int16_t y_no
 		return (uint8_t)100;
 	}
 	if (delta){
-		return (uint8_t)(30 + 70*(delta/45));
+		return (uint8_t)(1 + 70*(delta/45));
 	}
 	return 0;
 }
@@ -105,7 +105,7 @@ uint8_t ControlClass::y_calcPwm(int16_t x_nominal, int16_t x_theta, int16_t y_no
 		return (uint8_t)100;
 	}
 	if (delta){
-		return (uint8_t)(30 + 70*(delta/45));
+		return (uint8_t)(1 + 70*(delta/45));
 	}
 	return 0;
 }
