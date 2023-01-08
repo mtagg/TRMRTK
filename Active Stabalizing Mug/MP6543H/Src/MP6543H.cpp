@@ -15,6 +15,7 @@ bool MP6543HClass::setMotorPwm(uint8_t duty)
 		TIM1->CCR1 = duty;
 		return 1;
 	}else{
+		TIM1->CCR1 = 0;
 		return 0;
 	}
 }

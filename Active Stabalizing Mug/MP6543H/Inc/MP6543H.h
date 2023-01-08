@@ -20,6 +20,7 @@
 
 #define MOTOR_CONTROL_DURATION 10 // in ms
 
+
 /* CW and CCW are defined as the direction of the mug when facing the axis' motors from the outside of the mug, looking in.
  * so if the mug were to turn CCW on the handle's x-axis, this indicates a positive theta value.
  * To correct for this, we would set motor direction to CW to subtract from theta.
