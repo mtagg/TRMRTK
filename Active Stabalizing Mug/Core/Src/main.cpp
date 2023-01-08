@@ -18,9 +18,10 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
-
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include <math.h>
+
 #include "MC3479.h"
 
 #include "MP6543H.h"
@@ -41,7 +42,6 @@
 //#define __DEBUG_EN
 //#define __TEST_CODE_EN
 //#define __IDLE_CURRENT_TEST_EN
-//#define __UART_TEST_EN
 #define __NORMAL_MODE_EN
 #define __SIMULINK_EN
 //#define __OCP_MEASUREMENT_EN
@@ -177,7 +177,10 @@ int main(void)
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
+  TIM1->CCR1 = 66;
   HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_1);
+  TIM1->CCR2 = 33;
+  HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_2);
   while (1)
   {
 	  // Brake if any motor fault or if tilt button is pressed.
@@ -204,25 +207,17 @@ int main(void)
 #ifdef __NORMAL_MODE_EN
 
 
-	  // Loop Delay (for testing)
-//	  HAL_Delay(1);
 	  // fetch and normalize theta:
 	  MC3479.getXYZ(xData, yData, zData);
-//	  HAL_UART_Transmit(&huart3, &xData[0], sizeof(xData), 10);
-//	  HAL_UART_Transmit(&huart3, &yData[0], sizeof(yData), 10);
-//	  HAL_UART_Transmit(&huart3, &zData[0], sizeof(zData), 10);
-
 	  x_theta = ControlSystem.normalizeTheta(xData[0], xData[1], zData[0], zData[1]);
 	  y_theta = ControlSystem.normalizeTheta(yData[0], yData[1], zData[0], zData[1]);
+
+
 //	  if ((y_theta < allowableAngle) && (y_theta > -allowableAngle)){
 //		  MP6543H.setMotorPwm(0);
 //		  continue;
 //	  }
-//	  motionFlagStatus = MC3479.getMotionFlagStatus();
-//	  HAL_UART_Transmit(&huart2, &motionFlagStatus, sizeof(motionFlagStatus), 10);
-//	  motionIrqStatus = MC3479.getMotionIrqStatus();
-//	  HAL_UART_Transmit(&huart2, &motionIrqStatus, sizeof(motionIrqStatus), 10);
-//	  MC3479.clearMotionIrqStatus();
+
 
 
 	  //TEST
@@ -233,14 +228,14 @@ int main(void)
 //		  MP6543H.x_setMotorDir(CLOCKWISE_DIR);
 //	  }
 
-	  if (y_theta < 0){
-		  MP6543H.x_setMotorDir(!CLOCKWISE_DIR);
-//		  MP6543H.y_setMotorDir(!CLOCKWISE_DIR);
-	  }
-	  if (y_theta > 0){
-//  	  MP6543H.y_setMotorDir(CLOCKWISE_DIR);
-		  MP6543H.x_setMotorDir(CLOCKWISE_DIR);
-	  }
+//	  if (y_theta < 0){
+//		  MP6543H.x_setMotorDir(!CLOCKWISE_DIR);
+////		  MP6543H.y_setMotorDir(!CLOCKWISE_DIR);
+//	  }
+//	  if (y_theta > 0){
+////  	  MP6543H.y_setMotorDir(CLOCKWISE_DIR);
+//		  MP6543H.x_setMotorDir(CLOCKWISE_DIR);
+//	  }
 	  // END TEST
 
 #ifdef	 __SIMULINK_EN
@@ -257,8 +252,8 @@ int main(void)
 	  Simulink_Packet[6] = 0;							// Bottom 8 bits of yNominal
 	  Simulink_Packet[7] = 0;							// Upper 8 bits of yNominal
 
-	  // Send the Simulink Packet - Least significant Byte first - Byte 0 : Byte 7
-	  // dividing simulink packet size by 4 to only send x_theta
+// Send the Simulink Packet - Least significant Byte first - Byte 0 : Byte 7
+// dividing simulink packet size by 4 to only send x_theta
 //	  HAL_UART_Transmit(&huart3, &Simulink_Packet[0], sizeof(Simulink_Packet)/4, 10);
 	  HAL_UART_Transmit(&huart3, &Simulink_Packet[4], sizeof(Simulink_Packet)/4, 10);
 
@@ -268,22 +263,22 @@ int main(void)
 //	  while (HAL_UART_Receive(&huart3, &SimulinkPwm[0], sizeof(SimulinkPwm[0]), 0) == HAL_TIMEOUT){
 //		  HAL_Delay(1);
 //	  }
-	  HAL_UART_Receive(&huart3, &SimulinkPwm[0], sizeof(SimulinkPwm[0]), 1);
+//	  HAL_UART_Receive(&huart3, &SimulinkPwm[0], sizeof(SimulinkPwm[0]), 1);
 
 // Update X-axis PWM control:
-		  xPWM = SimulinkPwm[0];
+//		  xPWM = SimulinkPwm[0];
 
 // TEMPORARY IN-CODE P-CONTROL (ANISH)
-	  	  xPWM = (y_theta < 0) ? (int16_t)(-y_theta/2) : (int16_t)(y_theta/2); 	// Set xPWM to 50% Theta
+//	  	  xPWM = (y_theta < 0) ? (int16_t)(-y_theta/2) : (int16_t)(y_theta/2); 	// Set xPWM to 50% Theta
 	  	  MP6543H.x_motorBrake(true);											// Stop driving motor temporarily
 	  	  HAL_TIM_PWM_Stop(&htim1, TIM_CHANNEL_1); 								// Stop PWM output temporarily to update
-	  	  TIM1->CCR1 = xPWM;													// Update duty-cycle register with new duty%
+//	  	  TIM1->CCR1 = xPWM;													// Update duty-cycle register with new duty%
+	  	  MP6543H.x_setMotorDir(1);
+	  	  TIM1->CCR1 = 50;
 	  	  HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_1);								// Restart PWM output
 	  	  MP6543H.x_motorBrake(false);											// Release the x motor again
 
 // TODO: Update Y-axis PWM control:
-
-
 
 
 #else
@@ -308,7 +303,6 @@ int main(void)
 
 
 #endif //__SIMULINK_EN//
-
 #endif //__NORMAL_MODE_EN//
 
 #ifdef __OCP_MEASUREMENT_EN
@@ -343,10 +337,11 @@ int main(void)
 #endif //__OCP_MEASUREMENT_EN//
 
 #ifdef __DEBUG_EN
-
-	  HAL_UART_Transmit(&huart2, &newLine, sizeof(newLine), 10);
-	  HAL_UART_Transmit(&huart2, &motionFlagStatus, sizeof(motionFlagStatus), 10);
-	  HAL_UART_Transmit(&huart2, &motionIrqStatus, sizeof(motionIrqStatus), 10);
+	//	  motionFlagStatus = MC3479.getMotionFlagStatus();
+	//	  HAL_UART_Transmit(&huart2, &motionFlagStatus, sizeof(motionFlagStatus), 10);
+	//	  motionIrqStatus = MC3479.getMotionIrqStatus();
+	//	  HAL_UART_Transmit(&huart2, &motionIrqStatus, sizeof(motionIrqStatus), 10);
+	//	  MC3479.clearMotionIrqStatus();
 
 	  HAL_UART_Transmit(&huart2, &newLine, sizeof(newLine), 10);
 	  HAL_UART_Transmit(&huart2, &xData[0], sizeof(xData), 10);
@@ -364,38 +359,14 @@ int main(void)
 
 #ifdef __TEST_CODE_EN
 
-
-//	  // Start PWM for x motor
+//	  MP6543H.x_setMotorDir(COUNTER_CLOCKWISE_DIR);
 //	  MP6543H.x_motorBrake(false);
-//	  MP6543H.setMotorPwm(0);
-//	  MP6543H.x_startMotorPwmDuration(2000);
-//
-//	  MP6543H.x_motorBrake(true);
-//	  MP6543H.setMotorPwm(25);
-//	  MP6543H.x_startMotorPwmDuration(2000);
-//
-	  MP6543H.x_setMotorDir(COUNTER_CLOCKWISE_DIR);
-	  MP6543H.x_motorBrake(false);
-	  MP6543H.setMotorPwm(50);
-	  MP6543H.x_startMotorPwmDuration(1000);
-	  HAL_Delay(4000);
-	  MP6543H.x_setMotorDir(CLOCKWISE_DIR);
-	  MP6543H.x_startMotorPwmDuration(1000);
-	  HAL_Delay(4000);
-//
-//	  MP6543H.x_motorBrake(true);
-//	  MP6543H.setMotorPwm(75);
-//	  MP6543H.x_startMotorPwmDuration(2000);
-//
-//	  MP6543H.x_motorBrake(true);
-//	  MP6543H.setMotorPwm(100);
-//	  MP6543H.x_startMotorPwmDuration(2000);
-
-
-
-
-
-
+//	  MP6543H.setMotorPwm(50);
+//	  MP6543H.x_startMotorPwmDuration(1000);
+//	  HAL_Delay(4000);
+//	  MP6543H.x_setMotorDir(CLOCKWISE_DIR);
+//	  MP6543H.x_startMotorPwmDuration(1000);
+//	  HAL_Delay(4000);
 #endif //__TEST_CODE_EN//
 
 
@@ -413,20 +384,6 @@ int main(void)
 	  HAL_Delay(5000);
 #endif //__IDLE_CURRENT_TEST_EN//
 
-
-#ifdef __UART_TEST_EN
-	  uint8_t test1 [] = "Hello";
-	  HAL_UART_Transmit(&huart2, &test1[0], sizeof(test1), 10);
-	  HAL_UART_Transmit(&huart2, &newLine[0], sizeof(newLine), 10);
-	  HAL_UART_Transmit(&huart2, &newLine[0], sizeof(newLine), 10);
-	  HAL_Delay(500);
-
-	  uint8_t test4 [] = "Do sum Flip";
-	  HAL_UART_Transmit(&huart3, &test4[0], sizeof(test4), 10);
-	  HAL_UART_Transmit(&huart3, &newLine[0], sizeof(newLine), 10);
-	  HAL_UART_Transmit(&huart3, &newLine[0], sizeof(newLine), 10);
-	  HAL_Delay(500);
-#endif //__UART_TEST_EN
 
     /* USER CODE END WHILE */
 
