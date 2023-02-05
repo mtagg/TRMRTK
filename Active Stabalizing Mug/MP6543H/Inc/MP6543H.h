@@ -38,27 +38,36 @@ public:
 //TODO: Finalize member variables
 
 
-	GPIO_TypeDef * _x_DIR_GPIO;
-	GPIO_TypeDef * _x_nBRAKE_GPIO;
+//	GPIO_TypeDef * _x_DIR_GPIO;
+//	GPIO_TypeDef * _x_nBRAKE_GPIO;
 	GPIO_TypeDef *_x_nSLEEP_GPIO;
 	GPIO_TypeDef *_x_nFAULT_GPIO;
-	TIM_HandleTypeDef * _x_PWM_TIMER;
-	uint16_t _x_PWM_CHANNEL;
-	uint16_t _x_DIR_PIN;
-	uint16_t _x_nBRAKE_PIN;
+	GPIO_TypeDef* _x_ENA;
+	GPIO_TypeDef* _x_ENB;
+	GPIO_TypeDef* _x_ENC;
+//	uint16_t _x_DIR_PIN;
+//	uint16_t _x_nBRAKE_PIN;
 	uint16_t _x_nSLEEP_PIN;
 	uint16_t _x_nFAULT_PIN;
+	uint16_t _x_ENA_Pin;
+	uint16_t _x_ENB_Pin;
+	uint16_t _x_ENC_Pin;
 
-	GPIO_TypeDef * _y_DIR_GPIO;
-	GPIO_TypeDef * _y_nBRAKE_GPIO;
-	GPIO_TypeDef * _y_nSLEEP_GPIO;
-	GPIO_TypeDef * _y_nFAULT_GPIO;
-	TIM_HandleTypeDef * _y_PWM_TIMER;
-	uint16_t _y_PWM_CHANNEL;
-	uint16_t _y_DIR_PIN;
-	uint16_t _y_nBRAKE_PIN;
-	uint16_t _y_nSLEEP_PIN;
-	uint16_t _y_nFAULT_PIN;
+	uint16_t _x_PWM_CHANNEL_A;
+	uint16_t _x_PWM_CHANNEL_B;
+	uint16_t _x_PWM_CHANNEL_C;
+	TIM_HandleTypeDef * _x_PWM;
+
+//	GPIO_TypeDef * _y_DIR_GPIO;
+//	GPIO_TypeDef * _y_nBRAKE_GPIO;
+//	GPIO_TypeDef * _y_nSLEEP_GPIO;
+//	GPIO_TypeDef * _y_nFAULT_GPIO;
+//	TIM_HandleTypeDef * _y_PWM_TIMER;
+//	uint16_t _y_PWM_CHANNEL;
+//	uint16_t _y_DIR_PIN;
+//	uint16_t _y_nBRAKE_PIN;
+//	uint16_t _y_nSLEEP_PIN;
+//	uint16_t _y_nFAULT_PIN;
 
 
 
@@ -67,36 +76,22 @@ public:
  */
 
 
-	bool setMotorPwm(uint8_t pwm);
+//	bool setMotorPwm(uint8_t pwm);
 
 
 	//x-axis motor functions:
-	bool x_configMotorController(uint16_t xPwmChannel, TIM_HandleTypeDef * pwmTimer,
-									GPIO_TypeDef* xDir, uint16_t xDirPin,
-										GPIO_TypeDef* xBrake, uint16_t xBrakePin,
-											GPIO_TypeDef* xSleep, uint16_t xSleepPin,
-												GPIO_TypeDef* xFault, uint16_t xFaultPin);
-
+	bool x_configMotorController(uint16_t xPwmChannelA, uint16_t xPwmChannelB,
+									uint16_t xPwmChannelC, TIM_HandleTypeDef * xPwmTimer,
+									GPIO_TypeDef* ENA, uint16_t ENA_Pin,
+									GPIO_TypeDef* ENB, uint16_t ENB_Pin,
+									GPIO_TypeDef* ENC, uint16_t ENC_Pin,
+									GPIO_TypeDef* xSleep, uint16_t xSleepPin,
+									GPIO_TypeDef* xFault, uint16_t xFaultPin);
 	bool x_motorSleep();
 	bool x_motorWake();
-	bool x_setMotorDir(bool forward_polarity);
-	bool x_motorBrake(bool want_brake);
-	bool x_startMotorPwmDuration(uint32_t duration);
 	bool x_motorFault();
 
-	//y-axis motor functions:
-	bool y_configMotorController(uint16_t yPwmChannel, TIM_HandleTypeDef * pwmTimer,
-									GPIO_TypeDef* yDir, uint16_t yDirPin,
-										GPIO_TypeDef* yBrake, uint16_t yBrakePin,
-											GPIO_TypeDef* ySleep, uint16_t ySleepPin,
-												GPIO_TypeDef* yFault, uint16_t yFaultPin);
 
-	bool y_motorSleep();
-	bool y_motorWake();
-	bool y_setMotorDir(bool forward_polarity);
-	bool y_motorBrake(bool want_brake);
-	bool y_startMotorPwmDuration(uint32_t duration);
-	bool y_motorFault();
 
 
 };

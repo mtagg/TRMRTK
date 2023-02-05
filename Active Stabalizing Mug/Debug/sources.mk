@@ -31,6 +31,7 @@ CPP_DEPS :=
 
 # Every subdirectory with source files must be described here
 SUBDIRS := \
+AS5048/Src \
 ControlSystem/Src \
 Core/Src \
 Core/Startup \

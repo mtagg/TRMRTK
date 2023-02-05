@@ -1,0 +1,1 @@
+../MC3479/Src/MC3479.cpp:11:1:MC3479::MC3479(UART_HandleTypeDef*, UART_HandleTypeDef*, UART_HandleTypeDef*, SPI_HandleTypeDef*, I2C_TypeDef*)	24	static

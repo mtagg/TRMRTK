@@ -1,15 +1,4 @@
-../MP6543H/Src/MP6543H.cpp:12:6:bool MP6543HClass::setMotorPwm(uint8_t)	16	static
-../MP6543H/Src/MP6543H.cpp:23:6:bool MP6543HClass::x_configMotorController(uint16_t, TIM_HandleTypeDef*, GPIO_TypeDef*, uint16_t, GPIO_TypeDef*, uint16_t, GPIO_TypeDef*, uint16_t, GPIO_TypeDef*, uint16_t)	24	static
-../MP6543H/Src/MP6543H.cpp:46:6:bool MP6543HClass::x_motorSleep()	16	static
-../MP6543H/Src/MP6543H.cpp:51:6:bool MP6543HClass::x_motorWake()	16	static
-../MP6543H/Src/MP6543H.cpp:57:6:bool MP6543HClass::x_setMotorDir(bool)	16	static
-../MP6543H/Src/MP6543H.cpp:68:6:bool MP6543HClass::x_motorBrake(bool)	16	static
-../MP6543H/Src/MP6543H.cpp:78:6:bool MP6543HClass::x_startMotorPwmDuration(uint32_t)	16	static
-../MP6543H/Src/MP6543H.cpp:94:6:bool MP6543HClass::x_motorFault()	16	static
-../MP6543H/Src/MP6543H.cpp:99:6:bool MP6543HClass::y_configMotorController(uint16_t, TIM_HandleTypeDef*, GPIO_TypeDef*, uint16_t, GPIO_TypeDef*, uint16_t, GPIO_TypeDef*, uint16_t, GPIO_TypeDef*, uint16_t)	24	static
-../MP6543H/Src/MP6543H.cpp:122:6:bool MP6543HClass::y_motorSleep()	16	static
-../MP6543H/Src/MP6543H.cpp:128:6:bool MP6543HClass::y_motorWake()	16	static
-../MP6543H/Src/MP6543H.cpp:135:6:bool MP6543HClass::y_setMotorDir(bool)	16	static
-../MP6543H/Src/MP6543H.cpp:147:6:bool MP6543HClass::y_motorBrake(bool)	16	static
-../MP6543H/Src/MP6543H.cpp:157:6:bool MP6543HClass::y_startMotorPwmDuration(uint32_t)	16	static
-../MP6543H/Src/MP6543H.cpp:173:6:bool MP6543HClass::y_motorFault()	16	static
+../MP6543H/Src/MP6543H.cpp:23:6:bool MP6543HClass::x_configMotorController(uint16_t, uint16_t, uint16_t, TIM_HandleTypeDef*, GPIO_TypeDef*, uint16_t, GPIO_TypeDef*, uint16_t, GPIO_TypeDef*, uint16_t, GPIO_TypeDef*, uint16_t, GPIO_TypeDef*, uint16_t)	24	static
+../MP6543H/Src/MP6543H.cpp:51:6:bool MP6543HClass::x_motorSleep()	16	static
+../MP6543H/Src/MP6543H.cpp:56:6:bool MP6543HClass::x_motorWake()	16	static
+../MP6543H/Src/MP6543H.cpp:99:6:bool MP6543HClass::x_motorFault()	16	static

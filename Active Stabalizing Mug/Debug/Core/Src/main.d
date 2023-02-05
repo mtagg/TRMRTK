@@ -29,7 +29,8 @@ Core/Src/main.o: ../Core/Src/main.cpp ../Core/Inc/main.h \
  ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_uart.h \
  S:/Capstone/Firmware/Active\ Stabalizing\ Mug/MC3479/Inc/MC3479.h \
  S:/Capstone/Firmware/Active\ Stabalizing\ Mug/MP6543H/Inc/MP6543H.h \
- S:/Capstone/Firmware/Active\ Stabalizing\ Mug/ControlSystem/Inc/controlSystem.h
+ S:/Capstone/Firmware/Active\ Stabalizing\ Mug/ControlSystem/Inc/controlSystem.h \
+ S:/Capstone/Firmware/Active\ Stabalizing\ Mug/AS5048/Inc/AS5048A.h
 ../Core/Inc/main.h:
 ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal.h:
 ../Core/Inc/stm32f1xx_hal_conf.h:
@@ -62,3 +63,4 @@ Core/Src/main.o: ../Core/Src/main.cpp ../Core/Inc/main.h \
 S:/Capstone/Firmware/Active\ Stabalizing\ Mug/MC3479/Inc/MC3479.h:
 S:/Capstone/Firmware/Active\ Stabalizing\ Mug/MP6543H/Inc/MP6543H.h:
 S:/Capstone/Firmware/Active\ Stabalizing\ Mug/ControlSystem/Inc/controlSystem.h:
+S:/Capstone/Firmware/Active\ Stabalizing\ Mug/AS5048/Inc/AS5048A.h:

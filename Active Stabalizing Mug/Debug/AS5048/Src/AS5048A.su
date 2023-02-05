@@ -1,0 +1,9 @@
+S:/Capstone/Firmware/Active Stabalizing Mug/AS5048/Inc/AS5048A.h:14:7:AS5048A_Class::AS5048A_Class()	16	static
+../AS5048/Src/AS5048A.cpp:6:6:bool AS5048A_Class::SPI_Init(SPI_HandleTypeDef*, GPIO_TypeDef*, uint16_t)	24	static
+../AS5048/Src/AS5048A.cpp:13:6:bool AS5048A_Class::send_Nop()	16	static
+../AS5048/Src/AS5048A.cpp:19:10:uint16_t AS5048A_Class::Transcieve_Nop()	32	static
+../AS5048/Src/AS5048A.cpp:26:10:uint16_t AS5048A_Class::readMagnitude()	16	static
+../AS5048/Src/AS5048A.cpp:32:10:uint16_t AS5048A_Class::readAngle()	16	static
+../AS5048/Src/AS5048A.cpp:38:10:uint16_t AS5048A_Class::readError()	16	static
+../AS5048/Src/AS5048A.cpp:43:1:void __static_initialization_and_destruction_0(int, int)	16	static
+../AS5048/Src/AS5048A.cpp:43:1:cpp)	8	static

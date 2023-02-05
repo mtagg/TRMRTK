@@ -1,0 +1,12 @@
+../MC3479/Src/MC3479.cpp:16:6:bool MC3479Class::setSerialSPI(SPI_HandleTypeDef*, GPIO_TypeDef*, uint16_t)	24	static
+../MC3479/Src/MC3479.cpp:25:6:bool MC3479Class::SPI_readRegister(uint8_t, uint8_t*)	32	static
+../MC3479/Src/MC3479.cpp:39:9:uint8_t MC3479Class::SPI_writeRegister(uint8_t, uint8_t)	24	static
+../MC3479/Src/MC3479.cpp:56:6:bool MC3479Class::burstSPI_readRegister(uint8_t, uint8_t*, uint8_t)	32	static
+../MC3479/Src/MC3479.cpp:75:6:bool MC3479Class::burstSPI_writeRegister(uint8_t, uint8_t, uint8_t)	16	static
+../MC3479/Src/MC3479.cpp:106:6:void MC3479Class::configAccelerometer()	24	static
+../MC3479/Src/MC3479.cpp:326:9:uint8_t MC3479Class::setSampleRate(uint8_t)	24	static
+../MC3479/Src/MC3479.cpp:332:6:bool MC3479Class::getXYZ(uint8_t*, uint8_t*, uint8_t*)	32	static
+../MC3479/Src/MC3479.cpp:345:9:uint8_t MC3479Class::getMotionFlagStatus()	24	static
+../MC3479/Src/MC3479.cpp:352:9:uint8_t MC3479Class::getMotionIrqStatus()	24	static
+../MC3479/Src/MC3479.cpp:359:6:bool MC3479Class::clearMotionIrqStatus()	24	static
+../MC3479/Src/MC3479.cpp:366:9:uint8_t MC3479Class::getFifoIrqStatus()	24	static

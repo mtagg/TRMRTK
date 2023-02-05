@@ -7,3 +7,10 @@
 _Archive\
 _Archive\*
 _Archive
+.\Active Stabalizing Mug\.settings\
+.\Active Stabalizing Mug\.settings\.*
+.\Active Stabalizing Mug\.settings.*
+Active Stabalizing Mug\.settings\
+Active Stabalizing Mug\.settings\.*
+Active Stabalizing Mug\.settings.*
+*.DS_Store
