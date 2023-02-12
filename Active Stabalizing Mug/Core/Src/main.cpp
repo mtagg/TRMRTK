@@ -47,7 +47,7 @@
 //#define __IDLE_CURRENT_TEST_EN
 #define __NORMAL_MODE_EN
 //#define __SIMULINK_EN
-#define __OCP_MEASUREMENT_EN
+//#define __OCP_MEASUREMENT_EN
 
 /* USER CODE END PD */
 
@@ -130,8 +130,6 @@ int main(void)
   /* USER CODE BEGIN 2 */
 
 
-
-//#ifdef __NORMAL_MODE_EN
   uint8_t xData [2];
   uint8_t yData [2];
   uint8_t zData [2];
@@ -144,14 +142,25 @@ int main(void)
 //  bool y_inactive = false;
 
   int16_t x_theta = 0;
-  int16_t y_theta = 0;
+  int16_t last_x_theta = 0;
+  int16_t delta_x_theta;
   int16_t x_nominal = 0;
-  int8_t allowableAngle = 5;
+  //  int16_t y_theta = 0;
+  int8_t allowableAngle = 3;
+  uint16_t currentEncoderAngle;
+  uint16_t lastEncoderAngle;
+  int16_t deltaEncoderAngle = 0;
+  //TODO: Update after installing on mug
+  uint16_t encoderAngleOffset = 0;
 
-  // Initialize phase indicies
+// Initialize phase offsets:
+//TODO: initialize phase angle to 0 position of handle
  uint8_t phaseAindex = 0;
  uint8_t phaseBindex = phaseAindex + 60;
  uint8_t phaseCindex = phaseAindex + 120;
+ TIM1->CCR1 = ControlSystem.sineWave[phaseAindex];
+ TIM1->CCR2 = ControlSystem.sineWave[phaseBindex];
+ TIM1->CCR3 = ControlSystem.sineWave[phaseCindex];
 
 
 #ifdef	 __SIMULINK_EN
@@ -159,18 +168,7 @@ int main(void)
   uint8_t SimulinkPwm[2] = {0};
   uint8_t Simulink_Packet[8] = {0};
 #endif //__SIMULINK_EN//
-//#endif //_NORMAL_MODE_EN//
 
-#ifdef __DEBUG_EN
-  uint8_t newLine [] = "\n\r";
-#endif //__DEBUG_EN//
-
-
-
-  /* USER CODE END 2 */
-
-  /* Infinite loop */
-  /* USER CODE BEGIN WHILE */
   //Configure Accelerometer using PA4 for CSn, in SPI mode
   MC3479.setSerialSPI(&hspi1, GPIOA, SPI1_CSn_Pin);
   MC3479.configAccelerometer();
@@ -186,15 +184,26 @@ int main(void)
   ControlSystem.initControlSystem(x_nominal, allowableAngle);
   AS5048A.SPI_Init(&hspi2, SPI2_SCn_GPIO_Port, SPI2_SCn_Pin);
 
-  TIM1->CCR1 = ControlSystem.sineWave[phaseAindex];
-  TIM1->CCR2 = ControlSystem.sineWave[phaseBindex];
-  TIM1->CCR3 = ControlSystem.sineWave[phaseCindex];
+  // Start all phase PWM signals
   HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_1);
   HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_2);
   HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_3);
+  // Enable all Phase outputs
   HAL_GPIO_WritePin(MP6543H_EN_A_GPIO_Port, MP6543H_EN_A_Pin, GPIO_PIN_SET);
   HAL_GPIO_WritePin(MP6543H_EN_B_GPIO_Port, MP6543H_EN_B_Pin, GPIO_PIN_SET);
   HAL_GPIO_WritePin(MP6543H_EN_C_GPIO_Port, MP6543H_EN_C_Pin, GPIO_PIN_SET);
+
+  // Read angle once to start read sequence cycle:
+  lastEncoderAngle = AS5048A.readAngleSequential();
+  // Initial encoder values:
+  lastEncoderAngle = AS5048A.readAngleSequential() + encoderAngleOffset;
+  currentEncoderAngle = AS5048A.readAngleSequential() + encoderAngleOffset;
+
+
+  /* USER CODE END 2 */
+
+  /* Infinite loop */
+  /* USER CODE BEGIN WHILE */
 
   while (1)
   {
@@ -215,9 +224,10 @@ int main(void)
 
 	  // fetch and normalize theta:
 	  MC3479.getXYZ(xData, yData, zData);
-	  x_theta = ControlSystem.normalizeTheta(xData[0], xData[1], zData[0], zData[1]);
-	  y_theta = ControlSystem.normalizeTheta(yData[0], yData[1], zData[0], zData[1]);
-
+	  last_x_theta = x_theta;
+	  x_theta = ControlSystem.x_normalizeTheta(xData[0], xData[1], zData[0], zData[1]);
+	  delta_x_theta = x_theta - last_x_theta;
+	  //	  y_theta = ControlSystem.normalizeTheta(yData[0], yData[1], zData[0], zData[1]);
 
 #ifdef	 __SIMULINK_EN
 
@@ -241,22 +251,54 @@ int main(void)
 
 
 // Check for UART Rx Buffer:
-// Loop until we recieve xAxis PWM value in SimulinkPwm[0]:
+// Loop until we receive xAxis PWM value in SimulinkPwm[0]:
 //	  while (HAL_UART_Receive(&huart3, &SimulinkPwm[0], sizeof(SimulinkPwm[0]), 0) == HAL_TIMEOUT){
 //		  HAL_Delay(1);
 //	  }
 //	  HAL_UART_Receive(&huart3, &SimulinkPwm[0], sizeof(SimulinkPwm[0]), 1);
-
-
-
-#else
-
-
 #endif //__SIMULINK_EN//
 #endif //__NORMAL_MODE_EN//
+#ifdef __TEST_CODE_EN
 
+
+		  // Update 3phase PWM values
+		  int P = (20*((double)x_theta/90));			// Kp can be negative
+		  double scalar = 0.3;
+		  phaseAindex = (phaseAindex + 180 + P) % 180; // takes care of both directions
+		  phaseBindex = (phaseAindex + 60) % 180;
+		  phaseCindex = (phaseAindex + 120) % 180;
+
+//		  HAL_TIM_PWM_Stop(&htim1, TIM_CHANNEL_1);
+//		  HAL_TIM_PWM_Stop(&htim1, TIM_CHANNEL_2);
+//		  HAL_TIM_PWM_Stop(&htim1, TIM_CHANNEL_3);
+		  TIM1->CCR1 = scalar*ControlSystem.sineWave[phaseAindex];
+		  TIM1->CCR2 = scalar*ControlSystem.sineWave[phaseBindex];
+		  TIM1->CCR3 = scalar*ControlSystem.sineWave[phaseCindex];
+//		  HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_1);
+//		  HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_2);
+//		  HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_3);
+
+// Get AS5048 Encoder PWM Value
+//  	  HAL_ADC_Start(&hadc1);
+//  	  HAL_ADC_PollForConversion(&hadc1, HAL_MAX_DELAY);
+//  	  uint16_t encoderPWM = HAL_ADC_GetValue(&hadc1);
+//  	  uint8_t encoderMsg [2] = {(uint8_t)encoderPWM, (uint8_t)((encoderPWM>>8)&0xFF)};
+	  lastEncoderAngle = currentEncoderAngle;
+  	  currentEncoderAngle = AS5048A.readAngleSequential() + encoderAngleOffset;
+  	  deltaEncoderAngle = currentEncoderAngle - lastEncoderAngle;
+  	  UART_Send_16bit(&huart3, currentEncoderAngle);
+//  	  uint8_t encoderMsg [2] = {(uint8_t)encoderAngle, (uint8_t)((encoderAngle>>8)&0xFF)};
+//  	  HAL_UART_Transmit(&huart3, &encoderMsg[0], sizeof(encoderMsg), 1);
+//  	  uint16_t Nop = AS5048A.Transcieve_Nop();
+//  	  uint8_t NopRcv [2] = {(uint8_t)Nop, (uint8_t)((Nop>>8)&0xFF)};
+//  	  HAL_UART_Transmit(&huart3, &NopRcv[0], sizeof(NopRcv), 10);
+//  	  HAL_Delay(1);
+//  	  UART_Send_16bit(&huart3, x_theta);
+
+
+
+#endif //__TEST_CODE_EN//
 #ifdef __OCP_MEASUREMENT_EN
-
 
 // Read ADC Channel 4:s
 	HAL_ADC_Start(&hadc2);
@@ -284,72 +326,6 @@ int main(void)
 //	HAL_Delay(4000);
 
 #endif //__OCP_MEASUREMENT_EN//
-
-#ifdef __DEBUG_EN
-	//	  motionFlagStatus = MC3479.getMotionFlagStatus();
-	//	  HAL_UART_Transmit(&huart2, &motionFlagStatus, sizeof(motionFlagStatus), 10);
-	//	  motionIrqStatus = MC3479.getMotionIrqStatus();
-	//	  HAL_UART_Transmit(&huart2, &motionIrqStatus, sizeof(motionIrqStatus), 10);
-	//	  MC3479.clearMotionIrqStatus();
-
-	  HAL_UART_Transmit(&huart2, &newLine, sizeof(newLine), 10);
-	  HAL_UART_Transmit(&huart2, &xData[0], sizeof(xData), 10);
-	  UART_Send_16bit(&huart2, x_theta);
-
-	  HAL_UART_Transmit(&huart2, &newLine, sizeof(newLine), 10);
-	  HAL_UART_Transmit(&huart2, &yData[0], sizeof(yData), 10);
-	  UART_Send_16bit(&huart2, y_theta);
-
-	  HAL_UART_Transmit(&huart2, &newLine, sizeof(newLine), 10);
-	  HAL_UART_Transmit(&huart2, &zData[0], sizeof(zData), 10);
-
-	  HAL_Delay(2000);
-#endif //__DEBUG_EN//
-
-#ifdef __TEST_CODE_EN
-
-	  // Update 3phase PWM values
-	  int Kp = (10*((double)x_theta/90));
-  	  double scalar = 0.3;
-  	  phaseAindex = (phaseAindex + 180 + Kp) % 180;
-//	  if (x_theta < 0){
-//		  phaseAindex = (phaseAindex + 180 + Kp) % 180;
-//	  }
-//	  else{
-//		  phaseAindex = (phaseAindex + Kp) % 180;
-//	  }
-
-  	  phaseBindex = (phaseAindex + 60) % 180;
-  	  phaseCindex = (phaseAindex + 120) % 180;
-
-  	  HAL_TIM_PWM_Stop(&htim1, TIM_CHANNEL_1);
-  	  HAL_TIM_PWM_Stop(&htim1, TIM_CHANNEL_2);
-  	  HAL_TIM_PWM_Stop(&htim1, TIM_CHANNEL_3);
-  	  TIM1->CCR1 = scalar*ControlSystem.sineWave[phaseAindex];
-  	  TIM1->CCR2 = scalar*ControlSystem.sineWave[phaseBindex];
-  	  TIM1->CCR3 = scalar*ControlSystem.sineWave[phaseCindex];
-  	  HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_1);
-  	  HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_2);
-  	  HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_3);
-
-  	  // Get AS5048 Encoder PWM Value
-  	  // TODO: Test without ADC averaging first
-//  	  HAL_ADC_Start(&hadc1);
-//  	  HAL_ADC_PollForConversion(&hadc1, HAL_MAX_DELAY);
-//  	  uint16_t encoderPWM = HAL_ADC_GetValue(&hadc1);
-//  	  uint8_t encoderMsg [2] = {(uint8_t)encoderPWM, (uint8_t)((encoderPWM>>8)&0xFF)};
-
-//  	  uint16_t encoderAngle = AS5048A.readError();
-//  	  uint8_t encoderMsg [2] = {(uint8_t)encoderAngle, (uint8_t)((encoderAngle>>8)&0xFF)};
-//  	  HAL_UART_Transmit(&huart3, &encoderMsg[0], sizeof(encoderMsg), 10);
-
-//  	  HAL_Delay(10);
-
-  	  // TODO: After validating ADC, validate SPI here:
-
-
-#endif //__TEST_CODE_EN//
-
 
 #ifdef __IDLE_CURRENT_TEST_EN
 	  MC3479.setSampleRate(RATE0_50Hz);
@@ -590,7 +566,7 @@ static void MX_SPI2_Init(void)
   hspi2.Init.CLKPolarity = SPI_POLARITY_LOW;
   hspi2.Init.CLKPhase = SPI_PHASE_1EDGE;
   hspi2.Init.NSS = SPI_NSS_SOFT;
-  hspi2.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_2;
+  hspi2.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_4;
   hspi2.Init.FirstBit = SPI_FIRSTBIT_MSB;
   hspi2.Init.TIMode = SPI_TIMODE_DISABLE;
   hspi2.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
@@ -806,7 +782,7 @@ static void MX_GPIO_Init(void)
 HAL_StatusTypeDef UART_Send_16bit(UART_HandleTypeDef* uart, uint16_t data)
 {
 	uint8_t Data[2]= {(uint8_t)(data & 0xFF), (uint8_t)((data >> 8) & 0xFF)};
-	return HAL_UART_Transmit(uart, &Data[0], sizeof(Data), 10);
+	return HAL_UART_Transmit(uart, &Data[0], sizeof(Data), 1);
 }
 /* USER CODE END 4 */
 

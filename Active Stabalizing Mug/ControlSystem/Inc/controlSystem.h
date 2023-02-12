@@ -26,7 +26,7 @@ public:
 	int8_t x_allowableAngle = 10;
 	int16_t x_nominalAngle = 0;
 	double RADS_TO_DEGREES = 180/3.14159;
-	int16_t x_lastTenAngles[10] = {0};
+//	int16_t x_lastTenAngles[10] = {0};
 	queue<int16_t> x_previousAngles;
 
 uint8_t sineWave[180] = {
@@ -334,7 +334,7 @@ uint8_t sineWave[180] = {
 	// Wrapper
 	// Returns theta as the arctan of the ratio between data/z with angles between -90 and +90 degrees
 	// where data is x or y accelerometer data values
-	int16_t normalizeTheta(uint8_t data0, uint8_t data1, uint8_t z0, uint8_t z1);
+	int16_t x_normalizeTheta(uint8_t data0, uint8_t data1, uint8_t z0, uint8_t z1);
 
 	bool initControlSystem(int16_t x_nominal, int8_t x_allowable);
 
@@ -344,7 +344,7 @@ uint8_t sineWave[180] = {
 	uint8_t x_calcPwm(int16_t x_nominal, int16_t x_theta, int16_t y_nominal, int16_t y_theta);
 //	uint8_t y_calcPwm(int16_t x_nominal, int16_t x_theta, int16_t y_nominal, int16_t y_theta);
 
-
+	int16_t averageAngle(queue<int16_t> angles, int n);
 };
 
 extern ControlClass ControlSystem;
