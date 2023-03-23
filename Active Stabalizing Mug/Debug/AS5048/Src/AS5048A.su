@@ -1,9 +1,9 @@
-S:/Capstone/Firmware/Active Stabalizing Mug/AS5048/Inc/AS5048A.h:15:7:AS5048A_Class::AS5048A_Class()	16	static
+S:/Capstone/Firmware/Active Stabalizing Mug/AS5048/Inc/AS5048A.h:17:7:AS5048A_Class::AS5048A_Class()	16	static
 ../AS5048/Src/AS5048A.cpp:6:6:bool AS5048A_Class::SPI_Init(SPI_HandleTypeDef*, GPIO_TypeDef*, uint16_t)	24	static
 ../AS5048/Src/AS5048A.cpp:14:6:bool AS5048A_Class::send_Nop()	16	static
 ../AS5048/Src/AS5048A.cpp:20:10:uint16_t AS5048A_Class::Transcieve_Nop()	32	static
-../AS5048/Src/AS5048A.cpp:39:10:uint16_t AS5048A_Class::readAngleSequential()	32	static
+../AS5048/Src/AS5048A.cpp:39:9:int16_t AS5048A_Class::readAngleSequential()	32	static
 ../AS5048/Src/AS5048A.cpp:61:10:uint16_t AS5048A_Class::readError()	16	static
-../AS5048/Src/AS5048A.cpp:74:10:uint16_t AS5048A_Class::convertMagToDegrees(uint16_t)	24	static
+../AS5048/Src/AS5048A.cpp:74:9:int16_t AS5048A_Class::convertMagToDegrees(uint16_t)	24	static
 ../AS5048/Src/AS5048A.cpp:77:1:void __static_initialization_and_destruction_0(int, int)	16	static
 ../AS5048/Src/AS5048A.cpp:77:1:cpp)	8	static

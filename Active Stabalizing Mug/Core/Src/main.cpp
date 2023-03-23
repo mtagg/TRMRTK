@@ -40,7 +40,13 @@
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
 
-#define INACTIVITY_THRESHOLD 5000 //value where incactivity_counter will trigger sleep/idle
+/* CW and CCW are defined as the direction of the mug when facing the axis' motors from the outside of the mug, looking in.
+ * so if the mug were to turn CCW on the handle's x-axis, this indicates a positive theta value.
+ * To correct for this, we would set motor direction to CW to subtract from theta.
+ * */
+//#define CLOCKWISE_DIR (1)
+//#define COUNTER_CLOCKWISE_DIR (-1)
+#define INACTIVITY_THRESHOLD 800 //value where incactivity_counter will trigger sleep/idle
 
 //#define __DEBUG_EN
 #define __TEST_CODE_EN
@@ -64,6 +70,7 @@ SPI_HandleTypeDef hspi1;
 SPI_HandleTypeDef hspi2;
 
 TIM_HandleTypeDef htim1;
+TIM_HandleTypeDef htim2;
 
 UART_HandleTypeDef huart2;
 UART_HandleTypeDef huart3;
@@ -82,9 +89,10 @@ static void MX_USART2_UART_Init(void);
 static void MX_USART3_UART_Init(void);
 static void MX_ADC1_Init(void);
 static void MX_SPI2_Init(void);
+static void MX_TIM2_Init(void);
 /* USER CODE BEGIN PFP */
 HAL_StatusTypeDef UART_Send_16bit(UART_HandleTypeDef* uart, uint16_t data);
-//bool UART_Send_String(UART_HandleTypeDef* uart, char str[], int char_cnt);
+void delay_us(uint16_t us);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -127,6 +135,7 @@ int main(void)
   MX_USART3_UART_Init();
   MX_ADC1_Init();
   MX_SPI2_Init();
+  MX_TIM2_Init();
   /* USER CODE BEGIN 2 */
 
 
@@ -136,36 +145,34 @@ int main(void)
 //  uint8_t motionFlagStatus;
 //  uint8_t motionIrqStatus;
 
-// TODO: implement sleep routine
-//  int inactivity_counter = 0;
+// TODO: implement sleep routine:
+  uint16_t inactivity_counter = 0;
 //  bool x_inactive = false;
 //  bool y_inactive = false;
 
-  int16_t x_theta = 0;
-  int16_t last_x_theta = 0;
-  int16_t delta_x_theta;
+
+
+
+  double x_theta = 0;
+  double delta_x_theta;
+  double delta_x_theta_threshold = 1; // movement less than 1 degree  is assumed to be a stationary mug
   int16_t x_nominal = 0;
   //  int16_t y_theta = 0;
-  int8_t allowableAngle = 3;
-  uint16_t currentEncoderAngle;
-  uint16_t lastEncoderAngle;
-  int16_t deltaEncoderAngle = 0;
-  //TODO: Update after installing on mug
-  uint16_t encoderAngleOffset = 0;
 
-// Initialize phase offsets:
-//TODO: initialize phase angle to 0 position of handle
- uint8_t phaseAindex = 0;
- uint8_t phaseBindex = phaseAindex + 60;
- uint8_t phaseCindex = phaseAindex + 120;
- TIM1->CCR1 = ControlSystem.sineWave[phaseAindex];
- TIM1->CCR2 = ControlSystem.sineWave[phaseBindex];
- TIM1->CCR3 = ControlSystem.sineWave[phaseCindex];
+  int8_t allowableAngle = 5;
+  int16_t currentEncoderAngle;
+//  int16_t deltaEncoderAngle = 0;
+//  int16_t deltaEncoderAngleThreshold = 5; // movement of 5 degrees when delta x has remained less than 1 degree is assumed to be a stationary mug.
+  int16_t encoderAngleOffset = 11;
+  int16_t sineIndexAtZero = 275; // Phase angles when encoder is at 0 degrees in relation to the mug
+
+  double scalar; // Phase amplitude constant, 1.0 for 100% amplitude, 0.0 for 0% amplitude.
+
 
 
 #ifdef	 __SIMULINK_EN
 	  //UART3 used for Simulink output/input
-  uint8_t SimulinkPwm[2] = {0};
+  uint8_t Simulink_Out[2] = {0};
   uint8_t Simulink_Packet[8] = {0};
 #endif //__SIMULINK_EN//
 
@@ -181,9 +188,35 @@ int main(void)
 									  	  	  MP6543H_nSLEEP_X_GPIO_Port, MP6543H_nSLEEP_X_Pin,
 											  	  MP6543H_nFAULT_X_GPIO_Port, MP6543H_nFAULT_X_Pin);
 
-  ControlSystem.initControlSystem(x_nominal, allowableAngle);
+  ControlSystem.initControlSystem();
   AS5048A.SPI_Init(&hspi2, SPI2_SCn_GPIO_Port, SPI2_SCn_Pin);
 
+  // Get first accelerometer position:
+  MC3479.getXYZ(xData, yData, zData);
+  x_theta = ControlSystem.x_normalizeTheta(xData[0], xData[1], zData[0], zData[1]);
+
+
+
+  // Initial encoder variables:
+  currentEncoderAngle = (AS5048A.readAngleSequential() + (360 + encoderAngleOffset))%360 - 180;
+  currentEncoderAngle = (AS5048A.readAngleSequential() + (360 + encoderAngleOffset))%360 - 180;
+
+
+// Initialize position variables:
+  // Determine Initial Sine index based on accelerometer:
+  uint8_t relativePhaseAngle = currentEncoderAngle % (360/N_POLE_PAIRS);
+  // Initialize phase offsets:
+  uint16_t phaseAindex = (sineIndexAtZero + (relativePhaseAngle / DEG_PER_PHASE_INC));
+  phaseAindex %= N_SINE_IDX;
+  uint16_t phaseBindex = (phaseAindex + 120)%N_SINE_IDX;
+  uint16_t phaseCindex = (phaseAindex + 240)%N_SINE_IDX;
+  TIM1->CCR1 = 0.1*ControlSystem.sineWave[phaseAindex];
+  TIM1->CCR2 = 0.1*ControlSystem.sineWave[phaseBindex];
+  TIM1->CCR3 = 0.1*ControlSystem.sineWave[phaseCindex];
+
+  //		  HAL_TIM_PWM_Stop(&htim1, TIM_CHANNEL_1);
+  //		  HAL_TIM_PWM_Stop(&htim1, TIM_CHANNEL_2);
+  //		  HAL_TIM_PWM_Stop(&htim1, TIM_CHANNEL_3);
   // Start all phase PWM signals
   HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_1);
   HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_2);
@@ -192,12 +225,51 @@ int main(void)
   HAL_GPIO_WritePin(MP6543H_EN_A_GPIO_Port, MP6543H_EN_A_Pin, GPIO_PIN_SET);
   HAL_GPIO_WritePin(MP6543H_EN_B_GPIO_Port, MP6543H_EN_B_Pin, GPIO_PIN_SET);
   HAL_GPIO_WritePin(MP6543H_EN_C_GPIO_Port, MP6543H_EN_C_Pin, GPIO_PIN_SET);
+  HAL_Delay(100);
 
-  // Read angle once to start read sequence cycle:
-  lastEncoderAngle = AS5048A.readAngleSequential();
-  // Initial encoder values:
-  lastEncoderAngle = AS5048A.readAngleSequential() + encoderAngleOffset;
-  currentEncoderAngle = AS5048A.readAngleSequential() + encoderAngleOffset;
+
+  // TEST LOL
+//  while (1){
+//	  phaseAindex = (phaseAindex+N_SINE_IDX+5)%N_SINE_IDX;
+//	  phaseBindex = (phaseAindex + 120) % N_SINE_IDX;
+//	  phaseCindex = (phaseAindex + 240) % N_SINE_IDX;
+//	  TIM1->CCR1 = 0.2*ControlSystem.sineWave[phaseAindex];
+//	  TIM1->CCR2 = 0.2*ControlSystem.sineWave[phaseBindex];
+//	  TIM1->CCR3 = 0.2*ControlSystem.sineWave[phaseCindex];
+//	  HAL_Delay(1);
+//  }
+  // END TEST LOL
+  // Spin handle CW if mug is more than 2 degrees CW in relation to handle:
+  while (currentEncoderAngle < -1){
+	  phaseAindex = (phaseAindex + 361)%N_SINE_IDX;
+	  phaseBindex = (phaseAindex + 120)%N_SINE_IDX;
+	  phaseCindex = (phaseAindex + 240)%N_SINE_IDX;
+	  TIM1->CCR1 = 0.6*ControlSystem.sineWave[phaseAindex];
+	  TIM1->CCR2 = 0.6*ControlSystem.sineWave[phaseBindex];
+	  TIM1->CCR3 = 0.6*ControlSystem.sineWave[phaseCindex];
+
+	  currentEncoderAngle = (AS5048A.readAngleSequential() + (360 + encoderAngleOffset))%360 - 180;
+//	  HAL_UART_Transmit(&huart3, &phaseAindex, 1, 10);
+//	  UART_Send_16bit(&huart3, currentEncoderAngle);
+	  HAL_Delay(1);
+  }
+  // Spin handle CCW if mug is more than 2 degrees CCW in relation to handle:
+  while (currentEncoderAngle > 1){
+	  phaseAindex = (phaseAindex + 359)%N_SINE_IDX;
+	  phaseBindex = (phaseAindex + 120)%N_SINE_IDX;
+	  phaseCindex = (phaseAindex + 240)%N_SINE_IDX;
+	  TIM1->CCR1 = 0.6*ControlSystem.sineWave[phaseAindex];
+	  TIM1->CCR2 = 0.6*ControlSystem.sineWave[phaseBindex];
+	  TIM1->CCR3 = 0.6*ControlSystem.sineWave[phaseCindex];
+
+	  currentEncoderAngle = (AS5048A.readAngleSequential() + (360 + encoderAngleOffset))%360 - 180;
+//	  HAL_UART_Transmit(&huart3, &phaseAindex, 1, 10);
+//	  UART_Send_16bit(&huart3, currentEncoderAngle);
+	  HAL_Delay(1);
+  }
+  HAL_Delay(250);
+  HAL_TIM_Base_Start(&htim2); // Start timer necessary for delay_ms() function.
+// ***END HANDLE HOMING***
 
 
   /* USER CODE END 2 */
@@ -209,93 +281,151 @@ int main(void)
   {
 	  // Brake if any motor fault or if tilt button is pressed.
 	  while(HAL_GPIO_ReadPin(nTILT_BUTTON_GPIO_Port, nTILT_BUTTON_Pin) == 0){
+		  //TODO: add homing routine here
+		  TIM1->CCR1 = 0.7*ControlSystem.sineWave[phaseAindex];
+		  TIM1->CCR2 = 0.7*ControlSystem.sineWave[phaseBindex];
+		  TIM1->CCR3 = 0.7*ControlSystem.sineWave[phaseCindex];
+// TEMPORARY FOR TRANSFER FUNCTION TESTING
+		  	  MC3479.getXYZ(xData, yData, zData);
+		  	  x_theta = ControlSystem.x_normalizeTheta(xData[0], xData[1], zData[0], zData[1]);
+		  	  delta_x_theta = ControlSystem.calculateDelta(ControlSystem.x_previousAngles);
+		  	  UART_Send_16bit(&huart3, (int16_t)x_theta);
+// END TEMP
 		  HAL_Delay(1);
 	  }
 	  while(MP6543H.x_motorFault()){
-		  HAL_Delay(1);
-#ifdef __OCP_MEASUREMENT_EN
-		  //This should allow us to see how long (approximately) we stay in the nFault loop
-		  uint8_t fault_current [2] = {0xFF, 0xFF};
-		  HAL_UART_Transmit(&huart3, &fault_current[0], sizeof(fault_current), HAL_MAX_DELAY);
-#endif
+		  HAL_UART_Transmit(&huart3, (uint8_t*)0xFFFF, sizeof(0xFFFF), 10);
+		  delay_us(100);
 	  }
 
 #ifdef __NORMAL_MODE_EN
 
 	  // fetch and normalize theta:
 	  MC3479.getXYZ(xData, yData, zData);
-	  last_x_theta = x_theta;
 	  x_theta = ControlSystem.x_normalizeTheta(xData[0], xData[1], zData[0], zData[1]);
-	  delta_x_theta = x_theta - last_x_theta;
+	  delta_x_theta = ControlSystem.calculateDelta(ControlSystem.x_previousAngles);
+
 	  //	  y_theta = ControlSystem.normalizeTheta(yData[0], yData[1], zData[0], zData[1]);
 
 #ifdef	 __SIMULINK_EN
+	  // simulink and matlab are VERY slow when compared to our 1ms control loop, and as such, motor corrections are also slow.
+	  // Matlab was used to implement a general PID tune, resulting in kp=0.4, ki=0.0, and ki=0.35.
+	  // NOTE: UART2 used for Simulink IO
 
-	  // NOTE: UART3 used for Simulink output/input
-
-	  // Construct the Simulink Packet:
+	  // Construct the Simulink Packet and send:
 //	  Simulink_Packet[0] = (uint8_t)(x_theta & 0x00FF); // Bottom 8 bits of xTheta
 //	  Simulink_Packet[1] = (uint8_t)(x_theta >> 8);		// Upper 8 bits of xTheta
-//	  Simulink_Packet[2] = 0;							// Bottom 8 bits of xNominal
-//	  Simulink_Packet[3] = 0;							// Upper 8 bits of xNominal
-//	  Simulink_Packet[4] = (uint8_t)(y_theta & 0x00FF);	// Bottom 8 bits of yTheta
-//	  Simulink_Packet[5] = (uint8_t)(y_theta >> 8);		// Upper 8 bits of yTheta
-//	  Simulink_Packet[6] = 0;							// Bottom 8 bits of yNominal
-//	  Simulink_Packet[7] = 0;							// Upper 8 bits of yNominal
-
-// Send the Simulink Packet - Least significant Byte first - Byte 0 : Byte 7
-// dividing simulink packet size by 4 to only send x_theta
 //	  HAL_UART_Transmit(&huart3, &Simulink_Packet[0], sizeof(Simulink_Packet)/4, 10);
-//	  HAL_UART_Transmit(&huart3, &Simulink_Packet[4], sizeof(Simulink_Packet)/4, 10);
-	  UART_Send_16bit(&huart3, y_theta);
+	  UART_Send_16bit(&huart2, (int16_t)x_theta);
 
 
 // Check for UART Rx Buffer:
 // Loop until we receive xAxis PWM value in SimulinkPwm[0]:
-//	  while (HAL_UART_Receive(&huart3, &SimulinkPwm[0], sizeof(SimulinkPwm[0]), 0) == HAL_TIMEOUT){
+//	  while (HAL_UART_Receive(&huart3, &Simulink_Out[0], sizeof(Simulink_Out[0]), 0) == HAL_TIMEOUT){
 //		  HAL_Delay(1);
 //	  }
-//	  HAL_UART_Receive(&huart3, &SimulinkPwm[0], sizeof(SimulinkPwm[0]), 1);
+
+	  // Code above replaced with a simple read and timeout to just keep the loop rolling.
+	  HAL_UART_Receive(&huart2, &Simulink_Out[0], sizeof(Simulink_Out[0]),100);
+	  int8_t P = Simulink_Out[0];
+#else
+	  // Simple P-Control for now...
+	  int16_t PID = ControlSystem.getPID(x_theta, x_nominal); 	// Can be negative (INCREASE FOR FASTER MOVEMENT)
+
 #endif //__SIMULINK_EN//
+
+	  // Check for inactivity:
+	  if (abs(delta_x_theta) < delta_x_theta_threshold && abs(x_theta) < allowableAngle){
+  		  inactivity_counter += 1;
+  	  }
+  	  else{
+  		  inactivity_counter = 0;
+  	  }
+
+
+	  if (inactivity_counter < INACTIVITY_THRESHOLD){
+		  // Update FOC amplitude and phase variables
+		  scalar = (abs(x_theta) < 5) ? 0.6 : 0.8;// 0.5 appears to be the minimum threshold where the motor resists skipping phases due to quick hand movements.
+		  phaseAindex = (phaseAindex + N_SINE_IDX + PID) % N_SINE_IDX;
+		  phaseBindex = (phaseAindex + 120) % N_SINE_IDX;
+		  phaseCindex = (phaseAindex + 240) % N_SINE_IDX;
+
+		  // Update PWM registers with new phase/amplitude
+		  //TODO: to compensate for imbalanced gimbal apply greater scalar to the more loaded direction of travel.
+		  TIM1->CCR1 = scalar*ControlSystem.sineWave[phaseAindex];
+		  TIM1->CCR2 = scalar*ControlSystem.sineWave[phaseBindex];
+		  TIM1->CCR3 = scalar*ControlSystem.sineWave[phaseCindex];
+
+		  // Arbitrary delay to regulate loop timing / smooth things out.
+		  // TODO: final delay value following PID tuning.
+		  delay_us(750); //750us vs 1000us does not appear to disrupt smooth motor operation.
+	  }
+//	  UART_Send_16bit(&huart3, currentEncoderAngle);
+//	  UART_Send_16bit(&huart3, (int16_t)x_theta);
+//	  UART_Send_16bit(&huart3, inactivity_counter);
+//    HAL_UART_Transmit(&huart3, &phaseAindex, sizeof(phaseAindex), 10);
+
+
 #endif //__NORMAL_MODE_EN//
 #ifdef __TEST_CODE_EN
 
 
-		  // Update 3phase PWM values
-		  int P = (20*((double)x_theta/90));			// Kp can be negative
-		  double scalar = 0.3;
-		  phaseAindex = (phaseAindex + 180 + P) % 180; // takes care of both directions
-		  phaseBindex = (phaseAindex + 60) % 180;
-		  phaseCindex = (phaseAindex + 120) % 180;
+	  /* TODO: implement mug-on-table-detection routine:
+	   * 1. Need to check x_theta over a range and get the delta.
+	   * 2. Track delta encoder angle over a similar range.
+	   * 3. Whenever the delta x_theta is within a threshold, check for delta encoder angle being over a threshold.
+	   * 4. If encoder angle has changed greater than x_theta, it can be assumed the handle is spinning.
+	   * 5. If we have been inactive for a reasonable time,Home the handle. put delay to avoid noise in sensor measurements.
+	   * 5. continue to check for delta x_theta while going into a lower-power mode.
+	   * 6. break out of loop once x_theta is sufficiently great.
+	   */
 
-//		  HAL_TIM_PWM_Stop(&htim1, TIM_CHANNEL_1);
-//		  HAL_TIM_PWM_Stop(&htim1, TIM_CHANNEL_2);
-//		  HAL_TIM_PWM_Stop(&htim1, TIM_CHANNEL_3);
-		  TIM1->CCR1 = scalar*ControlSystem.sineWave[phaseAindex];
-		  TIM1->CCR2 = scalar*ControlSystem.sineWave[phaseBindex];
-		  TIM1->CCR3 = scalar*ControlSystem.sineWave[phaseCindex];
-//		  HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_1);
-//		  HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_2);
-//		  HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_3);
-
-// Get AS5048 Encoder PWM Value
-//  	  HAL_ADC_Start(&hadc1);
-//  	  HAL_ADC_PollForConversion(&hadc1, HAL_MAX_DELAY);
-//  	  uint16_t encoderPWM = HAL_ADC_GetValue(&hadc1);
-//  	  uint8_t encoderMsg [2] = {(uint8_t)encoderPWM, (uint8_t)((encoderPWM>>8)&0xFF)};
-	  lastEncoderAngle = currentEncoderAngle;
-  	  currentEncoderAngle = AS5048A.readAngleSequential() + encoderAngleOffset;
-  	  deltaEncoderAngle = currentEncoderAngle - lastEncoderAngle;
-  	  UART_Send_16bit(&huart3, currentEncoderAngle);
-//  	  uint8_t encoderMsg [2] = {(uint8_t)encoderAngle, (uint8_t)((encoderAngle>>8)&0xFF)};
-//  	  HAL_UART_Transmit(&huart3, &encoderMsg[0], sizeof(encoderMsg), 1);
-//  	  uint16_t Nop = AS5048A.Transcieve_Nop();
-//  	  uint8_t NopRcv [2] = {(uint8_t)Nop, (uint8_t)((Nop>>8)&0xFF)};
-//  	  HAL_UART_Transmit(&huart3, &NopRcv[0], sizeof(NopRcv), 10);
-//  	  HAL_Delay(1);
-//  	  UART_Send_16bit(&huart3, x_theta);
+	  // TEST CODE FOR ON-TABLE DETECTION:
+	  // TODO: Introduce breaks into while loops with checks for delta_x in case mug is picked up mid-homing.
 
 
+	  if (inactivity_counter >= INACTIVITY_THRESHOLD){
+		  // TODO: Do we even need encoder data checks to see if we are inactive?
+	  	  currentEncoderAngle = (AS5048A.readAngleSequential() + (360 + encoderAngleOffset))%360 - 180;
+//	  	  deltaEncoderAngle = ControlSystem.calculateDeltaEncoder(currentEncoderAngle);
+	  		  // Home Handle
+	  		  // TODO: Make a handle homing function
+	  		  // Spin handle CW if mug is more than 2 degrees CW in relation to handle:
+	  		  while (currentEncoderAngle < -1){
+	  			  phaseAindex = (phaseAindex+N_SINE_IDX+1)%N_SINE_IDX;
+	  			  phaseBindex = (phaseAindex + 120) % N_SINE_IDX;
+	  			  phaseCindex = (phaseAindex + 240) % N_SINE_IDX;
+	  			  TIM1->CCR1 = 0.6*ControlSystem.sineWave[phaseAindex];
+	  			  TIM1->CCR2 = 0.6*ControlSystem.sineWave[phaseBindex];
+	  			  TIM1->CCR3 = 0.6*ControlSystem.sineWave[phaseCindex];
+
+	  			  currentEncoderAngle = (AS5048A.readAngleSequential() + (360 + encoderAngleOffset))%360 - 180;
+	  		//	  HAL_UART_Transmit(&huart3, &phaseAindex, 1, 10);
+	  		//	  UART_Send_16bit(&huart3, currentEncoderAngle);
+	  			  HAL_Delay(1);
+	  		  }
+	  		  // Spin handle CCW if mug is more than 2 degrees CCW in relation to handle:
+	  		  while (currentEncoderAngle > 1){
+	  			phaseAindex = (phaseAindex+N_SINE_IDX-1)%N_SINE_IDX;
+	  			phaseBindex = (phaseAindex + 120) % N_SINE_IDX;
+	  			phaseCindex = (phaseAindex + 240) % N_SINE_IDX;
+	  			  TIM1->CCR1 = 0.6*ControlSystem.sineWave[phaseAindex];
+	  			  TIM1->CCR2 = 0.6*ControlSystem.sineWave[phaseBindex];
+	  			  TIM1->CCR3 = 0.6*ControlSystem.sineWave[phaseCindex];
+
+	  			  currentEncoderAngle = (AS5048A.readAngleSequential() + (360 + encoderAngleOffset))%360 - 180;
+	  		//	  HAL_UART_Transmit(&huart3, &phaseAindex, 1, 10);
+	  		//	  UART_Send_16bit(&huart3, currentEncoderAngle);
+	  			  HAL_Delay(1);
+	  		  }
+	  		  scalar = 0.1;
+			  TIM1->CCR1 = scalar*ControlSystem.sineWave[phaseAindex];
+			  TIM1->CCR2 = scalar*ControlSystem.sineWave[phaseBindex];
+			  TIM1->CCR3 = scalar*ControlSystem.sineWave[phaseCindex];
+//			  UART_Send_16bit(&huart3, (int16_t)x_theta);
+//			  UART_Send_16bit(&huart3, (int16_t)delta_x_theta);
+			  ControlSystem.resetPID();
+	  	  }
 
 #endif //__TEST_CODE_EN//
 #ifdef __OCP_MEASUREMENT_EN
@@ -329,15 +459,11 @@ int main(void)
 
 #ifdef __IDLE_CURRENT_TEST_EN
 	  MC3479.setSampleRate(RATE0_50Hz);
-//	  MP6543H.x_motorBrake(true);
-//	  MP6543H.y_motorBrake(true);
 	  MP6543H.x_motorSleep();
 	  MP6543H.y_motorSleep();
 	  HAL_Delay(5000);
 	  MP6543H.x_motorWake();
 	  MP6543H.y_motorWake();
-//	  MP6543H.x_motorBrake(false);
-//	  MP6543H.y_motorBrake(false);
 	  HAL_Delay(5000);
 #endif //__IDLE_CURRENT_TEST_EN//
 
@@ -362,10 +488,13 @@ void SystemClock_Config(void)
   /** Initializes the RCC Oscillators according to the specified parameters
   * in the RCC_OscInitTypeDef structure.
   */
-  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI;
+  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSE;
+  RCC_OscInitStruct.HSEState = RCC_HSE_ON;
+  RCC_OscInitStruct.HSEPredivValue = RCC_HSE_PREDIV_DIV1;
   RCC_OscInitStruct.HSIState = RCC_HSI_ON;
-  RCC_OscInitStruct.HSICalibrationValue = RCC_HSICALIBRATION_DEFAULT;
-  RCC_OscInitStruct.PLL.PLLState = RCC_PLL_NONE;
+  RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
+  RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
+  RCC_OscInitStruct.PLL.PLLMUL = RCC_PLL_MUL3;
   if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
   {
     Error_Handler();
@@ -375,17 +504,17 @@ void SystemClock_Config(void)
   */
   RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
                               |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2;
-  RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_HSI;
+  RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
   RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
-  RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV1;
+  RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV2;
   RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;
 
-  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_0) != HAL_OK)
+  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_1) != HAL_OK)
   {
     Error_Handler();
   }
   PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_ADC;
-  PeriphClkInit.AdcClockSelection = RCC_ADCPCLK2_DIV2;
+  PeriphClkInit.AdcClockSelection = RCC_ADCPCLK2_DIV4;
   if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInit) != HAL_OK)
   {
     Error_Handler();
@@ -528,7 +657,7 @@ static void MX_SPI1_Init(void)
   hspi1.Init.CLKPolarity = SPI_POLARITY_LOW;
   hspi1.Init.CLKPhase = SPI_PHASE_1EDGE;
   hspi1.Init.NSS = SPI_NSS_SOFT;
-  hspi1.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_2;
+  hspi1.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_8;
   hspi1.Init.FirstBit = SPI_FIRSTBIT_MSB;
   hspi1.Init.TIMode = SPI_TIMODE_DISABLE;
   hspi1.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
@@ -665,6 +794,51 @@ static void MX_TIM1_Init(void)
 }
 
 /**
+  * @brief TIM2 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_TIM2_Init(void)
+{
+
+  /* USER CODE BEGIN TIM2_Init 0 */
+
+  /* USER CODE END TIM2_Init 0 */
+
+  TIM_ClockConfigTypeDef sClockSourceConfig = {0};
+  TIM_MasterConfigTypeDef sMasterConfig = {0};
+
+  /* USER CODE BEGIN TIM2_Init 1 */
+
+  /* USER CODE END TIM2_Init 1 */
+  htim2.Instance = TIM2;
+  htim2.Init.Prescaler = 48-1;
+  htim2.Init.CounterMode = TIM_COUNTERMODE_UP;
+  htim2.Init.Period = 65535;
+  htim2.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+  htim2.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+  if (HAL_TIM_Base_Init(&htim2) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
+  if (HAL_TIM_ConfigClockSource(&htim2, &sClockSourceConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
+  sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
+  if (HAL_TIMEx_MasterConfigSynchronization(&htim2, &sMasterConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN TIM2_Init 2 */
+
+  /* USER CODE END TIM2_Init 2 */
+
+}
+
+/**
   * @brief USART2 Initialization Function
   * @param None
   * @retval None
@@ -773,7 +947,7 @@ static void MX_GPIO_Init(void)
   /*Configure GPIO pin : nTILT_BUTTON_Pin */
   GPIO_InitStruct.Pin = nTILT_BUTTON_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Pull = GPIO_PULLUP;
   HAL_GPIO_Init(nTILT_BUTTON_GPIO_Port, &GPIO_InitStruct);
 
 }
@@ -784,6 +958,15 @@ HAL_StatusTypeDef UART_Send_16bit(UART_HandleTypeDef* uart, uint16_t data)
 	uint8_t Data[2]= {(uint8_t)(data & 0xFF), (uint8_t)((data >> 8) & 0xFF)};
 	return HAL_UART_Transmit(uart, &Data[0], sizeof(Data), 1);
 }
+
+void delay_us (uint16_t us)
+{
+
+	__HAL_TIM_SET_COUNTER(&htim2,0);  // set the counter value a 0
+	while (__HAL_TIM_GET_COUNTER(&htim2) < us);  // wait for the counter to reach the us input in the parameter
+	//TODO: add idle/sleep to this if desired.
+}
+
 /* USER CODE END 4 */
 
 /**

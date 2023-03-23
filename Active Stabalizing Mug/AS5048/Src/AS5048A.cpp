@@ -36,7 +36,7 @@ uint16_t AS5048A_Class::Transcieve_Nop(){
 //	HAL_GPIO_WritePin(this->_CSN_GPIO, this->_CSN_PIN, GPIO_PIN_SET);
 //	return AS5048A.Transcieve_Nop() & 0x3FFF; //removes error/parity
 //}
-uint16_t AS5048A_Class::readAngleSequential(){
+int16_t AS5048A_Class::readAngleSequential(){
 	uint8_t regValue [2];
 	HAL_GPIO_WritePin(this->_CSN_GPIO, this->_CSN_PIN, GPIO_PIN_RESET);
 	HAL_SPI_TransmitReceive(this->_SPI2, &this->ANGLE[0], &regValue[0], sizeof(this->ANGLE), AS5048A_SPI_TIMEOUT);
@@ -71,7 +71,7 @@ uint16_t AS5048A_Class::readError(){
 //	return AS5048A.Transcieve_Nop(); //removes error/parity
 //}
 
-uint16_t AS5048A_Class::convertMagToDegrees(uint16_t mag){
+int16_t AS5048A_Class::convertMagToDegrees(uint16_t mag){
 	double fract = ((double)mag-MAG_MIN)/(MAG_MAX-MAG_MIN);
-	return (uint16_t)(fract*359);
+	return (int16_t)(fract*359);
 }
