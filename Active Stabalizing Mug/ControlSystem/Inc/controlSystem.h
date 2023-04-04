@@ -15,7 +15,7 @@
 #include "math.h"
 #include <queue>
 
-#define THETA_MOVING_AVG_PERIOD 20
+#define THETA_MOVING_AVG_PERIOD 5
 #define CTRL_LOOP_PERIOD  (double)0.001
 #define N_SINE_IDX (int)360
 
@@ -77,7 +77,7 @@ uint8_t sineWave[N_SINE_IDX] = {
 
 	double qAngle= 0.002;	// uncertainty in the angle estimation process within the filter.
 	double qBias = 0.002;	// uncertainty in the bias process within the filter.
-	double rMeasure = 0.010; // represents the level of uncertainty in sensor measurements.
+	double rMeasure = 0.015; // represents the level of uncertainty in sensor measurements.
 	double angle = 0;		// current angle, updated each time by the kalman filter
 	double bias = 0;		// current bias, updated each time by kalman filter
 	double P[2][2] = {{0,0},{0,0}}; //Covariance matrix
@@ -89,13 +89,13 @@ uint8_t sineWave[N_SINE_IDX] = {
 /*
  * PID Control Variables
  */
-	double x_kp = 0.40;
+	double x_kp = 0.30;
 	double x_ki = 0.30;
 	double x_kd = 0.10;
 	double x_P = 0;
 	double x_I = 0;
 	double x_D = 0;
-	double tau = 0.02; // time constant x_D. 10ms to reach 2/3 of response. Lower Tau -> better LPF
+	double tau = 0.01; // time constant x_D. 10ms to reach 2/3 of response. Lower Tau -> better LPF
 	double error = 0;
 	double previous_error = 0;
 	double previous_angle = 0;

@@ -46,7 +46,7 @@
  * */
 //#define CLOCKWISE_DIR (1)
 //#define COUNTER_CLOCKWISE_DIR (-1)
-#define INACTIVITY_THRESHOLD 800 //value where incactivity_counter will trigger sleep/idle
+#define INACTIVITY_THRESHOLD 1000 //value where incactivity_counter will trigger sleep/idle
 
 //#define __DEBUG_EN
 #define __TEST_CODE_EN
@@ -155,15 +155,15 @@ int main(void)
 
   double x_theta = 0;
   double delta_x_theta;
-  double delta_x_theta_threshold = 1; // movement less than 1 degree  is assumed to be a stationary mug
+  double delta_x_theta_threshold = 2; // movement less than 1 degree  is assumed to be a stationary mug
   int16_t x_nominal = 0;
   //  int16_t y_theta = 0;
 
-  int8_t allowableAngle = 5;
+  int8_t allowableAngle = 8;
   int16_t currentEncoderAngle;
 //  int16_t deltaEncoderAngle = 0;
 //  int16_t deltaEncoderAngleThreshold = 5; // movement of 5 degrees when delta x has remained less than 1 degree is assumed to be a stationary mug.
-  int16_t encoderAngleOffset = 11;
+  int16_t encoderAngleOffset = 71;
   int16_t sineIndexAtZero = 275; // Phase angles when encoder is at 0 degrees in relation to the mug
 
   double scalar; // Phase amplitude constant, 1.0 for 100% amplitude, 0.0 for 0% amplitude.
@@ -238,8 +238,8 @@ int main(void)
 //	  TIM1->CCR3 = 0.2*ControlSystem.sineWave[phaseCindex];
 //	  HAL_Delay(1);
 //  }
-  // END TEST LOL
-  // Spin handle CW if mug is more than 2 degrees CW in relation to handle:
+   //END TEST LOL
+//   Spin handle CW if mug is more than 2 degrees CW in relation to handle:
   while (currentEncoderAngle < -1){
 	  phaseAindex = (phaseAindex + 361)%N_SINE_IDX;
 	  phaseBindex = (phaseAindex + 120)%N_SINE_IDX;
@@ -267,7 +267,7 @@ int main(void)
 //	  UART_Send_16bit(&huart3, currentEncoderAngle);
 	  HAL_Delay(1);
   }
-  HAL_Delay(250);
+  HAL_Delay(1000);
   HAL_TIM_Base_Start(&htim2); // Start timer necessary for delay_ms() function.
 // ***END HANDLE HOMING***
 
@@ -281,17 +281,10 @@ int main(void)
   {
 	  // Brake if any motor fault or if tilt button is pressed.
 	  while(HAL_GPIO_ReadPin(nTILT_BUTTON_GPIO_Port, nTILT_BUTTON_Pin) == 0){
-		  //TODO: add homing routine here
 		  TIM1->CCR1 = 0.7*ControlSystem.sineWave[phaseAindex];
 		  TIM1->CCR2 = 0.7*ControlSystem.sineWave[phaseBindex];
 		  TIM1->CCR3 = 0.7*ControlSystem.sineWave[phaseCindex];
-// TEMPORARY FOR TRANSFER FUNCTION TESTING
-		  	  MC3479.getXYZ(xData, yData, zData);
-		  	  x_theta = ControlSystem.x_normalizeTheta(xData[0], xData[1], zData[0], zData[1]);
-		  	  delta_x_theta = ControlSystem.calculateDelta(ControlSystem.x_previousAngles);
-		  	  UART_Send_16bit(&huart3, (int16_t)x_theta);
-// END TEMP
-		  HAL_Delay(1);
+		  delay_us(1000);
 	  }
 	  while(MP6543H.x_motorFault()){
 		  HAL_UART_Transmit(&huart3, (uint8_t*)0xFFFF, sizeof(0xFFFF), 10);
@@ -345,7 +338,7 @@ int main(void)
 
 	  if (inactivity_counter < INACTIVITY_THRESHOLD){
 		  // Update FOC amplitude and phase variables
-		  scalar = (abs(x_theta) < 5) ? 0.6 : 0.8;// 0.5 appears to be the minimum threshold where the motor resists skipping phases due to quick hand movements.
+		  scalar = (abs(x_theta) < 10) ? 0.3 : 0.6;// 0.5 appears to be the minimum threshold where the motor resists skipping phases due to quick hand movements.
 		  phaseAindex = (phaseAindex + N_SINE_IDX + PID) % N_SINE_IDX;
 		  phaseBindex = (phaseAindex + 120) % N_SINE_IDX;
 		  phaseCindex = (phaseAindex + 240) % N_SINE_IDX;
@@ -358,7 +351,7 @@ int main(void)
 
 		  // Arbitrary delay to regulate loop timing / smooth things out.
 		  // TODO: final delay value following PID tuning.
-		  delay_us(750); //750us vs 1000us does not appear to disrupt smooth motor operation.
+		  delay_us(500); //750us vs 1000us does not appear to disrupt smooth motor operation.
 	  }
 //	  UART_Send_16bit(&huart3, currentEncoderAngle);
 //	  UART_Send_16bit(&huart3, (int16_t)x_theta);
@@ -391,7 +384,7 @@ int main(void)
 	  		  // Home Handle
 	  		  // TODO: Make a handle homing function
 	  		  // Spin handle CW if mug is more than 2 degrees CW in relation to handle:
-	  		  while (currentEncoderAngle < -1){
+	  		  while (currentEncoderAngle < -2){
 	  			  phaseAindex = (phaseAindex+N_SINE_IDX+1)%N_SINE_IDX;
 	  			  phaseBindex = (phaseAindex + 120) % N_SINE_IDX;
 	  			  phaseCindex = (phaseAindex + 240) % N_SINE_IDX;
@@ -402,10 +395,10 @@ int main(void)
 	  			  currentEncoderAngle = (AS5048A.readAngleSequential() + (360 + encoderAngleOffset))%360 - 180;
 	  		//	  HAL_UART_Transmit(&huart3, &phaseAindex, 1, 10);
 	  		//	  UART_Send_16bit(&huart3, currentEncoderAngle);
-	  			  HAL_Delay(1);
+	  			  HAL_Delay(2);
 	  		  }
 	  		  // Spin handle CCW if mug is more than 2 degrees CCW in relation to handle:
-	  		  while (currentEncoderAngle > 1){
+	  		  while (currentEncoderAngle > 2){
 	  			phaseAindex = (phaseAindex+N_SINE_IDX-1)%N_SINE_IDX;
 	  			phaseBindex = (phaseAindex + 120) % N_SINE_IDX;
 	  			phaseCindex = (phaseAindex + 240) % N_SINE_IDX;
@@ -416,9 +409,9 @@ int main(void)
 	  			  currentEncoderAngle = (AS5048A.readAngleSequential() + (360 + encoderAngleOffset))%360 - 180;
 	  		//	  HAL_UART_Transmit(&huart3, &phaseAindex, 1, 10);
 	  		//	  UART_Send_16bit(&huart3, currentEncoderAngle);
-	  			  HAL_Delay(1);
+	  			  HAL_Delay(2);
 	  		  }
-	  		  scalar = 0.1;
+	  		  scalar = 0.2;
 			  TIM1->CCR1 = scalar*ControlSystem.sineWave[phaseAindex];
 			  TIM1->CCR2 = scalar*ControlSystem.sineWave[phaseBindex];
 			  TIM1->CCR3 = scalar*ControlSystem.sineWave[phaseCindex];
